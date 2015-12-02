@@ -1,0 +1,8 @@
+include ':esoco-common'
+project(':esoco-common').projectDir = new File('../esoco-common')
+
+include ':objectrelations'
+project(':objectrelations').projectDir = new File('../objectrelations')
+
+include ':esoco-lib'
+project(':esoco-lib').projectDir = new File('../esoco-lib')
