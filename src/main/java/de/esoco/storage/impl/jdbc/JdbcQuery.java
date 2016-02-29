@@ -75,6 +75,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	//~ Static fields/initializers ---------------------------------------------
 
 	private static final String SELECT_TEMPLATE = "SELECT %s FROM %s";
+	private static final String SQL_NEGATION    = " NOT ";
 
 	//~ Instance fields --------------------------------------------------------
 
@@ -511,13 +512,13 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	 *
 	 * @param rComparison The comparison predicate to parse
 	 * @param sAttribute  The attribute to apply the comparison to
-	 * @param bNegate     TRUE if the expression shall be negated
 	 * @param rResult     The string builder to append the created string to
+	 * @param bNegate     TRUE if the expression shall be negated
 	 */
 	void parseComparison(Comparison<?, ?> rComparison,
 						 String			  sAttribute,
-						 boolean		  bNegate,
-						 StringBuilder    rResult)
+						 StringBuilder    rResult,
+						 boolean		  bNegate)
 	{
 		Object rCompareValue = rComparison.getRightValue();
 		String sPlaceholders = getComparisonPlaceholders(rCompareValue);
@@ -613,43 +614,6 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	}
 
 	/***************************************
-	 * Appends the strings that represent the SQL expression for a constraint
-	 * that is defined by a predicate to a string builder.
-	 *
-	 * @param rMapping   The mapping of the object to parse the query for
-	 * @param sAttribute The attribute for which the constraint is parsed
-	 * @param rPredicate The predicate to derive the constraints from
-	 * @param rResult    The string builder to append the created string to
-	 */
-	void parseConstraint(StorageMapping<?, ?, ?> rMapping,
-						 String					 sAttribute,
-						 Predicate<?>			 rPredicate,
-						 StringBuilder			 rResult)
-	{
-		// TODO: child element queries
-
-		boolean bNegate = false;
-
-		if (rPredicate instanceof Predicates.Not<?>)
-		{
-			rPredicate = ((Predicates.Not<?>) rPredicate).getPredicate();
-			bNegate    = true;
-		}
-
-		if (rPredicate instanceof Comparison<?, ?>)
-		{
-			Comparison<?, ?> rComparison = (Comparison<?, ?>) rPredicate;
-
-			parseComparison(rComparison, sAttribute, bNegate, rResult);
-		}
-		else
-		{
-			throw new IllegalArgumentException("Unsupported query predicate: " +
-											   rPredicate);
-		}
-	}
-
-	/***************************************
 	 * Recursively parses a query criteria predicate for the given storage
 	 * mapping and appends the corresponding SQL expressions to the given string
 	 * builder.
@@ -667,7 +631,16 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 						  Predicate<?>			  pCriteria,
 						  StringBuilder			  rResult)
 	{
-		boolean bValid = true;
+		boolean bNegate = false;
+		boolean bValid  = true;
+
+		if (pCriteria instanceof Predicates.Not<?>)
+		{
+			pCriteria = ((Predicates.Not<?>) pCriteria).getPredicate();
+			bNegate   = true;
+
+			rResult.append(SQL_NEGATION);
+		}
 
 		if (pCriteria instanceof PredicateJoin<?>)
 		{
@@ -687,9 +660,23 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 
 			bValid = parseFunctionPredicate(rMapping, pFunction, rResult);
 		}
+		else if (pCriteria instanceof Comparison<?, ?>)
+		{
+			if (bNegate)
+			{
+				// negations will be handled by parseComparison
+				rResult.setLength(rResult.length() - SQL_NEGATION.length());
+			}
+
+			parseComparison((Comparison<?, ?>) pCriteria,
+							sAttribute,
+							rResult,
+							bNegate);
+		}
 		else
 		{
-			parseConstraint(rMapping, sAttribute, pCriteria, rResult);
+			throw new IllegalArgumentException("Unsupported query predicate: " +
+											   pCriteria);
 		}
 
 		return bValid;
