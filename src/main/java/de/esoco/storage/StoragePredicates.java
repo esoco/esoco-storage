@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 package de.esoco.storage;
 
 import de.esoco.lib.expression.BinaryPredicate;
+import de.esoco.lib.expression.ElementAccessFunction;
 import de.esoco.lib.expression.Function;
 import de.esoco.lib.expression.Predicate;
 import de.esoco.lib.expression.Predicates;
 import de.esoco.lib.expression.function.GetElement;
+import de.esoco.lib.expression.function.GetElement.ReadField;
 import de.esoco.lib.expression.predicate.Comparison;
 import de.esoco.lib.expression.predicate.ElementPredicate;
 import de.esoco.lib.reflect.ReflectUtil;
@@ -204,41 +206,25 @@ public class StoragePredicates
 	}
 
 	/***************************************
-	 * Creates a new predicate that defines an ascending sort order for one or
-	 * more fields.
+	 * Creates a new predicate that defines an ascending sort order for a field.
 	 *
 	 * @see #sortBy(String, boolean)
 	 */
-	public static <T> Predicate<T> sortBy(String sField, String... sFields)
+	public static <T> SortPredicate<T> sortBy(String sField)
 	{
-		Predicate<T> pSort = sortBy(sField, true);
-
-		for (String sExtraField : sFields)
-		{
-			pSort = pSort.and(sortBy(sExtraField, true));
-		}
-
-		return pSort;
+		return sortBy(sField, true);
 	}
 
 	/***************************************
-	 * Creates a new predicate that defines an ascending sort order for one or
-	 * more properties that are defined by relation types.
+	 * Creates a new predicate that defines an ascending sort order for a
+	 * certain relation.
 	 *
 	 * @see #sortBy(RelationType, boolean)
 	 */
-	public static <T extends Relatable> Predicate<T> sortBy(
-		RelationType<?>    rProperty,
-		RelationType<?>... rProperties)
+	public static <T extends Relatable> SortPredicate<T> sortBy(
+		RelationType<?> rProperty)
 	{
-		Predicate<T> pSort = sortBy(rProperty, true);
-
-		for (RelationType<?> rExtraProperty : rProperties)
-		{
-			pSort = pSort.and(sortBy(rExtraProperty, true));
-		}
-
-		return pSort;
+		return sortBy(rProperty, true);
 	}
 
 	/***************************************
@@ -251,14 +237,10 @@ public class StoragePredicates
 	 *
 	 * @return A new sort predicate
 	 */
-	@SuppressWarnings("boxing")
-	public static <T> Predicate<T> sortBy(String sField, boolean bAscending)
+	public static <T> SortPredicate<T> sortBy(String  sField,
+											  boolean bAscending)
 	{
-		Predicate<T> pSort = ifField(sField, Predicates.alwaysTrue());
-
-		pSort.set(SORT_ASCENDING, bAscending);
-
-		return pSort;
+		return new SortPredicate<>(sField, bAscending);
 	}
 
 	/***************************************
@@ -271,17 +253,11 @@ public class StoragePredicates
 	 *
 	 * @return A new sort predicate
 	 */
-	@SuppressWarnings({ "boxing" })
-	public static <T extends Relatable> Predicate<T> sortBy(
+	public static <T extends Relatable> SortPredicate<T> sortBy(
 		RelationType<?> rProperty,
 		boolean			bAscending)
 	{
-		Predicate<T> pSort =
-			Predicates.ifProperty(rProperty, Predicates.alwaysTrue());
-
-		pSort.set(SORT_ASCENDING, bAscending);
-
-		return pSort;
+		return new SortPredicate<>(rProperty, bAscending);
 	}
 
 	//~ Inner Classes ----------------------------------------------------------
@@ -438,6 +414,46 @@ public class StoragePredicates
 			}
 
 			return aResult.toString();
+		}
+	}
+
+	/********************************************************************
+	 * An element predicate that is used to define the ordering of storage
+	 * queries.
+	 *
+	 * @author eso
+	 */
+	public static class SortPredicate<T> extends ElementPredicate<T, Object>
+	{
+		//~ Constructors -------------------------------------------------------
+
+		/***************************************
+		 * Creates a new instance for a certain field in the target class.
+		 *
+		 * @param sField     The name of the field
+		 * @param bAscending TRUE for an ascending sort, FALSE for descending
+		 */
+		public SortPredicate(String sField, boolean bAscending)
+		{
+			this(new ReadField<T, Object>(sField), bAscending);
+		}
+
+		/***************************************
+		 * Creates a new instance.
+		 *
+		 * @param fSortElement The function to access the element that defines
+		 *                     the sort order
+		 * @param bAscending   TRUE for an ascending sort, FALSE for descending
+		 */
+		@SuppressWarnings({ "unchecked", "boxing" })
+		public SortPredicate(
+			ElementAccessFunction<?, ? super T, ?> fSortElement,
+			boolean								   bAscending)
+		{
+			super((ElementAccessFunction<?, ? super T, Object>) fSortElement,
+				  Predicates.alwaysTrue());
+
+			set(SORT_ASCENDING, bAscending);
 		}
 	}
 }

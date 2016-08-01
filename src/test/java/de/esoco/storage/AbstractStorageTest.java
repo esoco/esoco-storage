@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,7 +163,8 @@ public abstract class AbstractStorageTest
 	public void testPaging() throws StorageException
 	{
 		Query<TestRecord> q =
-			rStorage.query(forType(TestRecord.class, sortBy("name", "value")));
+			rStorage.query(forType(TestRecord.class,
+								   sortBy("name").and(sortBy("value"))));
 
 		assertEquals(3, q.size());
 		q.set(StorageRelationTypes.QUERY_OFFSET, 1);
