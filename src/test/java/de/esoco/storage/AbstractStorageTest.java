@@ -24,6 +24,8 @@ import de.esoco.lib.expression.predicate.FunctionPredicate;
 
 import de.esoco.storage.mapping.ClassMapping;
 
+import java.net.URL;
+
 import java.util.Date;
 import java.util.Set;
 
@@ -59,6 +61,10 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractStorageTest
 {
+	//~ Static fields/initializers ---------------------------------------------
+
+	static final String TEST_URL = "http://www.example.com/";
+
 	//~ Instance fields --------------------------------------------------------
 
 	private Storage rStorage = null;
@@ -80,10 +86,10 @@ public abstract class AbstractStorageTest
 	/***************************************
 	 * Acquires and (if necessary) initializes the storage.
 	 *
-	 * @throws StorageException On errors
+	 * @throws Exception On errors
 	 */
 	@Before
-	public void initStorage() throws StorageException
+	public void initStorage() throws Exception
 	{
 		rStorage = StorageManager.getStorage(TestRecord.class);
 
@@ -100,6 +106,28 @@ public abstract class AbstractStorageTest
 		}
 
 		rQuery.close();
+	}
+
+	/***************************************
+	 * Test method for {@link Storage#query(QueryPredicate)}
+	 *
+	 * @throws StorageException On errors
+	 */
+	@Test
+	public void testAutoDatatypeMapping() throws StorageException
+	{
+		QueryResult<TestRecord> qr =
+			rStorage.query(forType(TestRecord.class,
+								   ifField("name", equalTo("jones"))))
+					.execute();
+
+		assertTrue(qr.hasNext());
+
+		TestRecord tr = qr.next();
+
+		URL u = tr.getUrl();
+
+		assertTrue(u.toString().startsWith(TEST_URL));
 	}
 
 	/***************************************
@@ -569,15 +597,19 @@ public abstract class AbstractStorageTest
 	 * @param  nIdStart The ID of the first record
 	 * @param  nCount   The number of records to store
 	 *
-	 * @throws StorageException On errors
+	 * @throws Exception On errors
 	 */
 	void storeTestRecords(String sName, int nIdStart, int nCount)
-		throws StorageException
+		throws Exception
 	{
 		for (int i = 1; i <= nCount; i++)
 		{
 			TestRecord aRecord =
-				new TestRecord(nIdStart + i - 1, sName, i, new Date());
+				new TestRecord(nIdStart + i - 1,
+							   sName,
+							   i,
+							   new Date(),
+							   new URL(TEST_URL + i));
 
 			for (int j = 1; j <= 5; j++)
 			{

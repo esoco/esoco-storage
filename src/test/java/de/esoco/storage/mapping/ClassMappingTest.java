@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage.mapping;
 
-import de.esoco.storage.StorageException;
 import de.esoco.storage.TestDetail;
 import de.esoco.storage.TestRecord;
 
+import java.net.URL;
+
 import java.util.Date;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,19 +40,25 @@ public class ClassMappingTest
 	/***************************************
 	 * Test instance creation.
 	 *
-	 * @throws StorageException
+	 * @throws Exception
 	 */
-	public void testConstructor() throws StorageException
+	@Test
+	public void testConstructor() throws Exception
 	{
 		ClassMapping<TestRecord> aMapping =
 			new ClassMapping<>(TestRecord.class);
 
-		TestRecord aRecord = new TestRecord(1, "foo", 42, new Date());
+		TestRecord aRecord =
+			new TestRecord(1,
+						   "foo",
+						   42,
+						   new Date(),
+						   new URL("http://example.com"));
 
 		aRecord.addDetail(new TestDetail("DETAIL1", 1));
 		aRecord.addDetail(new TestDetail("DETAIL2", 2));
 
-		assertEquals(4, aMapping.getAttributes().size());
+		assertEquals(5, aMapping.getAttributes().size());
 		assertEquals(1, aMapping.getChildMappings().size());
 	}
 }

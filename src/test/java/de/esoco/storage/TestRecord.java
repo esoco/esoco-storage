@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
+import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,10 +32,12 @@ public class TestRecord
 {
 	//~ Instance fields --------------------------------------------------------
 
-	private int				 id;
-	private String			 name;
-	private int				 value;
-	private Date			 date;
+	private int    id;
+	private String name;
+	private int    value;
+	private Date   date;
+	private URL    url;
+
 	private List<TestDetail> details = new ArrayList<TestDetail>();
 
 	//~ Constructors -----------------------------------------------------------
@@ -52,13 +56,15 @@ public class TestRecord
 	 * @param sName
 	 * @param nValue
 	 * @param rDate
+	 * @param rUrl
 	 */
-	public TestRecord(int nId, String sName, int nValue, Date rDate)
+	public TestRecord(int nId, String sName, int nValue, Date rDate, URL rUrl)
 	{
 		this.id    = nId;
 		this.date  = rDate;
 		this.name  = sName;
 		this.value = nValue;
+		this.url   = rUrl;
 	}
 
 	//~ Methods ----------------------------------------------------------------
@@ -112,6 +118,16 @@ public class TestRecord
 	public final String getName()
 	{
 		return name;
+	}
+
+	/***************************************
+	 * Returns the URI.
+	 *
+	 * @return The URI
+	 */
+	public final URL getUrl()
+	{
+		return url;
 	}
 
 	/***************************************
