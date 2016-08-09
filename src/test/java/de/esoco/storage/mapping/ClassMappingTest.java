@@ -16,12 +16,7 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage.mapping;
 
-import de.esoco.storage.TestDetail;
 import de.esoco.storage.TestRecord;
-
-import java.net.URL;
-
-import java.util.Date;
 
 import org.junit.Test;
 
@@ -47,16 +42,6 @@ public class ClassMappingTest
 	{
 		ClassMapping<TestRecord> aMapping =
 			new ClassMapping<>(TestRecord.class);
-
-		TestRecord aRecord =
-			new TestRecord(1,
-						   "foo",
-						   42,
-						   new Date(),
-						   new URL("http://example.com"));
-
-		aRecord.addDetail(new TestDetail("DETAIL1", 1));
-		aRecord.addDetail(new TestDetail("DETAIL2", 2));
 
 		assertEquals(5, aMapping.getAttributes().size());
 		assertEquals(1, aMapping.getChildMappings().size());
