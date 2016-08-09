@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.obrel.core.Annotations.RelationTypeNamespace;
 import org.obrel.core.RelationType;
 import org.obrel.core.RelationTypes;
 
-import static org.obrel.core.RelationTypeModifier.FINAL;
 import static org.obrel.core.RelationTypes.newDefaultValueType;
 import static org.obrel.core.RelationTypes.newFlagType;
 import static org.obrel.core.RelationTypes.newIntType;
@@ -90,11 +89,11 @@ public class StorageRelationTypes
 
 	/** Contains a reference to the storage definition of a storage. */
 	public static final RelationType<StorageDefinition> STORAGE_DEFINITION =
-		newType(FINAL);
+		newType();
 
 	/** Contains the storage mapping for the object where it has been set on. */
 	public static final RelationType<StorageMapping<?, ?, ?>> STORAGE_MAPPING =
-		newType(FINAL);
+		newType();
 
 	/**
 	 * Defines the maximum depth which a query should descend in the graph of an
