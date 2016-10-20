@@ -76,7 +76,7 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 *     or a valueOf(String) method.</li>
 	 * </ul>
 	 *
-	 * @see StorageMapping#checkAttributeValue(Relatable, Class, Object)
+	 * @see StorageMapping#checkAttributeValue(Relatable, Object)
 	 */
 	@Override
 	public Object checkAttributeValue(A rAttribute, Object rValue)
