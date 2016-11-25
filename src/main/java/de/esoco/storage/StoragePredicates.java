@@ -6,7 +6,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//		 http://www.apache.org/licenses/LICENSE-2.0
+//	  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -183,8 +183,8 @@ public class StoragePredicates
 	 * Returns a new query predicate for sub-queries on referenced objects in
 	 * relationships between storage objects. This method is a shortcut to
 	 * create a new instance of {@link QueryPredicate} for such queries with the
-	 * appropriate semantics. It is mainly intended to be used for (parsed)
-	 * storage queries and not for direct evaluation.
+	 * appropriate semantics. It is intended to be used for (parsed) storage
+	 * queries and not for direct evaluation.
 	 *
 	 * @param  rReferencedType The referenced type to query for
 	 * @param  fReferencedAttr A function that defines the referenced attribute
@@ -192,12 +192,14 @@ public class StoragePredicates
 	 *
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <T> Predicate<T> refersTo(
+	public static <T, V> Predicate<V> refersTo(
 		Class<T>			   rReferencedType,
-		Function<? super T, ?> fReferencedAttr,
+		Function<? super T, V> fReferencedAttr,
 		Predicate<? super T>   pCritera)
 	{
-		QueryPredicate<T> pRefersTo = refersTo(rReferencedType, pCritera);
+		@SuppressWarnings("unchecked")
+		QueryPredicate<V> pRefersTo =
+			(QueryPredicate<V>) refersTo(rReferencedType, pCritera);
 
 		pRefersTo.set(STORAGE_FUNCTION, fReferencedAttr);
 
