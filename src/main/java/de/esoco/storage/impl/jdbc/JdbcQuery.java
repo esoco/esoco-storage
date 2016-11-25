@@ -1,6 +1,18 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// esoco-storage source file
-// Copyright (c) 2016 by Elmar Sonnenschein / esoco GmbH
+// This file is a part of the 'esoco-storage' project.
+// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//		 http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage.impl.jdbc;
 
@@ -127,9 +139,11 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 		{
 			set(QUERY_DEPTH, pQuery.get(QUERY_DEPTH));
 		}
-		else if (pCriteria != null && pCriteria.hasRelation(QUERY_DEPTH))
+		else if (pCriteria != null &&
+				 (pCriteria instanceof Relatable) &&
+				 ((Relatable) pCriteria).hasRelation(QUERY_DEPTH))
 		{
-			set(QUERY_DEPTH, pCriteria.get(QUERY_DEPTH));
+			set(QUERY_DEPTH, ((Relatable) pCriteria).get(QUERY_DEPTH));
 		}
 		else if (rStorage.hasRelation(QUERY_DEPTH))
 		{

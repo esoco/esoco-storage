@@ -6,7 +6,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	  http://www.apache.org/licenses/LICENSE-2.0
+//		 http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -172,12 +172,11 @@ public class StoragePredicates
 	 *
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	@SuppressWarnings("unchecked")
-	public static <O, T> Predicate<O> refersTo(
+	public static <T> QueryPredicate<T> refersTo(
 		Class<T>			 rReferencedType,
 		Predicate<? super T> pCritera)
 	{
-		return (Predicate<O>) new QueryPredicate<T>(rReferencedType, pCritera);
+		return new QueryPredicate<T>(rReferencedType, pCritera);
 	}
 
 	/***************************************
@@ -193,12 +192,12 @@ public class StoragePredicates
 	 *
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <O, T> Predicate<O> refersTo(
+	public static <T> Predicate<T> refersTo(
 		Class<T>			   rReferencedType,
 		Function<? super T, ?> fReferencedAttr,
 		Predicate<? super T>   pCritera)
 	{
-		Predicate<O> pRefersTo = refersTo(rReferencedType, pCritera);
+		QueryPredicate<T> pRefersTo = refersTo(rReferencedType, pCritera);
 
 		pRefersTo.set(STORAGE_FUNCTION, fReferencedAttr);
 
