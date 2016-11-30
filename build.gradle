@@ -9,7 +9,7 @@ apply plugin: 'java'
 apply plugin: 'osgi'
 
 project.group   = 'de.esoco'
-project.version = '1.0.0'
+project.version = '1.0.1'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -23,7 +23,7 @@ dependencies {
 	}
 	else
 	{
-		compile 'de.esoco:esoco-lib:1.+'
+		compile 'de.esoco:esoco-lib:1.0.+'
 	}
     
     testCompile 'junit:junit:4.+'
