@@ -9,10 +9,9 @@ apply plugin: 'java'
 apply plugin: 'osgi'
 
 project.group   = 'de.esoco'
-project.version = '1.0.1'
+project.version = '1.1.0'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
 
 repositories { jcenter() }
 
@@ -23,7 +22,7 @@ dependencies {
 	}
 	else
 	{
-		compile 'de.esoco:esoco-lib:1.0.+'
+		compile 'de.esoco:esoco-lib:1.1.+'
 	}
     
     testCompile 'junit:junit:4.+'
