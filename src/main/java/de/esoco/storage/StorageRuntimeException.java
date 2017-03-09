@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package de.esoco.storage;
 
 /********************************************************************
- * A runtime exception that can be thrown from storage-related methods that
- * cannot throw a {@link StorageException}.
+ * A runtime exception that can be used if checked exceptions are not supported
+ * to wrap instances of {@link StorageException}.
  *
  * @author eso
  */
@@ -38,26 +38,23 @@ public class StorageRuntimeException extends RuntimeException
 	}
 
 	/***************************************
-	 * @see RuntimeException#RuntimeException(String)
-	 */
-	public StorageRuntimeException(String sMessage)
-	{
-		super(sMessage);
-	}
-
-	/***************************************
 	 * @see RuntimeException#RuntimeException(Throwable)
 	 */
-	public StorageRuntimeException(Throwable eCause)
+	public StorageRuntimeException(StorageException eCause)
 	{
 		super(eCause);
 	}
 
+	//~ Methods ----------------------------------------------------------------
+
 	/***************************************
-	 * @see RuntimeException#RuntimeException(String, Throwable)
+	 * Returns the causing {@link StorageException}.
+	 *
+	 * @see RuntimeException#getCause()
 	 */
-	public StorageRuntimeException(String sMessage, Throwable rCause)
+	@Override
+	public synchronized StorageException getCause()
 	{
-		super(sMessage, rCause);
+		return (StorageException) super.getCause();
 	}
 }
