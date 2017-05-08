@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -469,9 +469,7 @@ public class StorageManager
 	 * Releases a storage instance that has previously been acquired from the
 	 * storage manager. Will be invoked internally by {@link Storage#release()}.
 	 *
-	 * @param  rStorage The storage to release
-	 *
-	 * @throws StorageException If releasing the storage fails
+	 * @param rStorage The storage to release
 	 */
 	static void releaseStorage(Storage rStorage)
 	{

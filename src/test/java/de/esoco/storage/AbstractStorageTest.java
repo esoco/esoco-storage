@@ -367,7 +367,7 @@ public abstract class AbstractStorageTest
 
 	/***************************************
 	 * Test random query result access through {@link
-	 * QueryResult#setPosition(int)}.
+	 * QueryResult#setPosition(int, boolean)}.
 	 *
 	 * @throws StorageException
 	 */

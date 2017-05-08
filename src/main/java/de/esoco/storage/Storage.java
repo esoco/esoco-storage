@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -335,9 +335,9 @@ public abstract class Storage extends RelatedObject implements Transactional,
 
 	/***************************************
 	 * Stores a collection of objects. The default implementation invokes the
-	 * method {@link #storeSingleObject(Object)} for each collection element. It
-	 * can be overridden buy subclasses that provide a more efficient way to
-	 * store multiple objects.
+	 * method stores each collection element as a single object. It can be
+	 * overridden buy subclasses that provide a more efficient way to store
+	 * multiple objects.
 	 *
 	 * @param  rObjects The collection of objects to store
 	 *
