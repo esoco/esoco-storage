@@ -275,8 +275,9 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 
 				if (sPaging != null)
 				{
-					sPaging =
-						String.format(" " + sPaging, get(QUERY_LIMIT), nOffset);
+					int nLimit = Math.min(get(QUERY_LIMIT), size());
+
+					sPaging = String.format(" " + sPaging, nLimit, nOffset);
 					nOffset = 0;
 				}
 				else
