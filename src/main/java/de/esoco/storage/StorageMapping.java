@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 // limitations under the License.
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
+
+import de.esoco.lib.expression.Predicate;
 
 import de.esoco.storage.impl.jdbc.JdbcRelationTypes;
 
@@ -168,6 +170,23 @@ public interface StorageMapping<T, A extends Relatable,
 	 *         never be null)
 	 */
 	public Collection<?> getChildren(T rObject, C rChildMapping);
+
+	/***************************************
+	 * Returns a predicate with default criteria for the mapped type or a
+	 * subclass of it. Can be implemented by subclasses to implement a hierarchy
+	 * of persisted classes that share the same storage area (e.g. a SQL table)
+	 * or to filter certain data (e.g. legacy or historical data) from queries.
+	 *
+	 * <p>The default implementation always returns NULL which is ignored.</p>
+	 *
+	 * @param  rType The (sub-type) that is actually queried
+	 *
+	 * @return The default criteria for the given type or NULL for none
+	 */
+	default public Predicate<T> getDefaultCriteria(Class<? extends T> rType)
+	{
+		return null;
+	}
 
 	/***************************************
 	 * Returns the ID attribute of this mapping.

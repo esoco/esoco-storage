@@ -131,6 +131,13 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 		rMapping =
 			(StorageMapping<T, Relatable, ?>) StorageManager.getMapping(rType);
 
+		Predicate<T> pDefaultCriteria = rMapping.getDefaultCriteria(rType);
+
+		if (pDefaultCriteria != null)
+		{
+			pCriteria = Predicates.and(pCriteria, pDefaultCriteria);
+		}
+
 		// parseQueryCriteria will also fill aSortPredicates
 		sQueryCriteria = parseQueryCriteria(rMapping, pCriteria);
 		sOrderCriteria = createOrderCriteria(aSortPredicates);
