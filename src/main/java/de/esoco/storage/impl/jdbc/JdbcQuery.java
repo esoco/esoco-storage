@@ -181,7 +181,6 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	 *
 	 * @return The child query predicate
 	 */
-	@SuppressWarnings("boxing")
 	static <T> QueryPredicate<T> createChildQueryPredicate(
 		StorageMapping<?, ?, ?>			rParentMapping,
 		StorageMapping<T, Relatable, ?> rChildMapping,
