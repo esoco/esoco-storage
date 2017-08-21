@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,8 +54,10 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 	private final JdbcStorage					  rStorage;
 	private final StorageMapping<T, Relatable, ?> rMapping;
 	private final ResultSet						  aResultSet;
-	private int									  nInitialOffset;
 	private final boolean						  bIsChildQuery;
+
+	private int     nOffset		    = 0;
+	private boolean bOffsetRelative = false;
 
 	private boolean bHasNext = false;
 
@@ -79,11 +81,11 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 					boolean							bIsChildQuery)
 		throws SQLException
 	{
-		this.rStorage	    = rStorage;
-		this.rMapping	    = rStorageMapping;
-		this.aResultSet     = rResultSet;
-		this.nInitialOffset = nOffset + 1; // +1 for 1-based JDBC indexing
-		this.bIsChildQuery  = bIsChildQuery;
+		this.rStorage	   = rStorage;
+		this.rMapping	   = rStorageMapping;
+		this.aResultSet    = rResultSet;
+		this.nOffset	   = nOffset + 1; // +1 for 1-based JDBC indexing
+		this.bIsChildQuery = bIsChildQuery;
 	}
 
 	//~ Methods ----------------------------------------------------------------
@@ -112,10 +114,20 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 	{
 		try
 		{
-			if (nInitialOffset != 0)
+			if (nOffset != 0)
 			{
-				bHasNext	   = aResultSet.absolute(nInitialOffset);
-				nInitialOffset = 0;
+				bHasNext = aResultSet.absolute(nOffset);
+
+				if (bOffsetRelative)
+				{
+					bHasNext = aResultSet.relative(nOffset);
+				}
+				else
+				{
+					bHasNext = aResultSet.absolute(nOffset);
+				}
+
+				nOffset = 0;
 			}
 			else
 			{
@@ -222,27 +234,12 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 	 * @see QueryResult#setPosition(int, boolean)
 	 */
 	@Override
-	public boolean setPosition(int nIndex, boolean bRelative)
-		throws StorageException
+	public void setPosition(int nIndex, boolean bRelative)
 	{
-		try
-		{
-			if (bRelative)
-			{
-				bHasNext = aResultSet.relative(nIndex);
-			}
-			else
-			{
-				bHasNext =
-					aResultSet.absolute(nIndex >= 0 ? nIndex + 1 : nIndex);
-			}
-		}
-		catch (SQLException e)
-		{
-			throw new StorageException(e);
-		}
+		// convert absolute 0-based index to 1-based JDBC offset
+		nOffset = bRelative ? nIndex : nIndex >= 0 ? nIndex + 1 : nIndex;
 
-		return bHasNext;
+		bOffsetRelative = bRelative;
 	}
 
 	/***************************************

@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,12 +63,10 @@ public interface QueryResult<T> extends Closeable, Relatable
 	 * return the object at the given position. The index of the first object is
 	 * 0. Negative index values will position the result from the end where -1
 	 * indicates the last object. A relative position of 0 corresponds to the
-	 * current position, i.e. no change.
-	 *
-	 * <p>The result will be immediately positioned on the respective object,
-	 * the method {@link #hasNext()} must not be invoked before querying the
-	 * object at the given position with {@link #next()}. If the given position
-	 * doesn't reference a valid object this method will return FALSE.</p>
+	 * current position, i.e. no change. The result will typically only be
+	 * positioned on the designated record when the method {@link #hasNext()} is
+	 * invoked before querying the object at the given position with {@link
+	 * #next()}.
 	 *
 	 * <p>This is an optional operation which may not be supported by some
 	 * implementations in which case an {@link UnsupportedOperationException}
@@ -79,12 +77,8 @@ public interface QueryResult<T> extends Closeable, Relatable
 	 * @param  bRelative TRUE to set the position relative to the current
 	 *                   position, FALSE to set the absolute position
 	 *
-	 * @return TRUE if a the position is valid, FALSE if not
-	 *
-	 * @throws StorageException              If the positioning fails
 	 * @throws UnsupportedOperationException If positioning is not supported by
-	 *                                       this result
+	 *                                       the result implementation
 	 */
-	public boolean setPosition(int nIndex, boolean bRelative)
-		throws StorageException;
+	public void setPosition(int nIndex, boolean bRelative);
 }
