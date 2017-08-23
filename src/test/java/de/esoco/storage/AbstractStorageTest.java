@@ -181,8 +181,7 @@ public abstract class AbstractStorageTest
 	}
 
 	/***************************************
-	 * Test absolute result positioning with {@link QueryResult#setPosition(int,
-	 * boolean)}.
+	 * Test absolute result positioning with query offset and limit.
 	 *
 	 * @throws StorageException
 	 */
@@ -407,9 +406,11 @@ public abstract class AbstractStorageTest
 		}
 
 		aResult.setPosition(0, false);
+		assertTrue(aResult.hasNext());
 		assertEquals("jones", aResult.next().getName());
 
 		aResult.setPosition(2, false);
+		assertTrue(aResult.hasNext());
 		assertEquals("smith", aResult.next().getName());
 
 		q.close();
@@ -438,9 +439,11 @@ public abstract class AbstractStorageTest
 		}
 
 		aResult.setPosition(-3, true);
+		assertTrue(aResult.hasNext());
 		assertEquals("jones", aResult.next().getName());
 
 		aResult.setPosition(2, true);
+		assertTrue(aResult.hasNext());
 		assertEquals("smith", aResult.next().getName());
 
 		q.close();

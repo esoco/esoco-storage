@@ -116,8 +116,6 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 		{
 			if (nOffset != 0)
 			{
-				bHasNext = aResultSet.absolute(nOffset);
-
 				if (bOffsetRelative)
 				{
 					bHasNext = aResultSet.relative(nOffset);
