@@ -76,6 +76,29 @@ public class StoragePredicates
 	}
 
 	/***************************************
+	 * Creates a filter predicate for a SQL like expression. Any wildcards in
+	 * the given filter value will be converted to the corresponding SQL
+	 * wildcards by means of {@link
+	 * StorageManager#convertToSqlConstraint(String)}.
+	 *
+	 * @param  sFilter The original filter value
+	 *
+	 * @return The converted filter value
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Predicate<T> createLikeFilter(String sFilter)
+	{
+		if (sFilter.indexOf('*') == -1)
+		{
+			sFilter += "*";
+		}
+
+		sFilter = StorageManager.convertToSqlConstraint(sFilter);
+
+		return (Predicate<T>) like(sFilter);
+	}
+
+	/***************************************
 	 * Returns a new query predicate for a certain type of storage object.
 	 *
 	 * @param  rType    The class of the storage object to query for
