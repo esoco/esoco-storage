@@ -76,9 +76,12 @@ public class StoragePredicates
 	}
 
 	/***************************************
-	 * Creates a filter predicate for a SQL like expression. Any wildcards in
-	 * the given filter value will be converted to the corresponding SQL
-	 * wildcards by means of {@link
+	 * Creates a wildcard filter predicate for a SQL like expression. The filter
+	 * string may contain wildcard characters like '*' or '?' (or their SQL
+	 * equivalents). If the filter string doesn't contain a '*' wildcard one
+	 * will be appended to the end (to match all values that start with the
+	 * filter value). Any wildcards in the given filter value will be converted
+	 * to the corresponding SQL wildcards by means of {@link
 	 * StorageManager#convertToSqlConstraint(String)}.
 	 *
 	 * @param  sFilter The original filter value
@@ -86,11 +89,11 @@ public class StoragePredicates
 	 * @return The converted filter value
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Predicate<T> createLikeFilter(String sFilter)
+	public static <T> Predicate<T> createWildcardFilter(String sFilter)
 	{
 		if (sFilter.indexOf('*') == -1)
 		{
-			sFilter += "*";
+			sFilter += "%";
 		}
 
 		sFilter = StorageManager.convertToSqlConstraint(sFilter);
