@@ -71,7 +71,6 @@ import static de.esoco.storage.StorageRelationTypes.QUERY_OFFSET;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_FUNCTION;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.JDBC_CHILD_QUERY;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_DISABLE_CHILD_COUNTS;
-import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_PAGING_EXPRESSION;
 import static de.esoco.storage.impl.jdbc.JdbcStorage.formatStatement;
 
 import static org.obrel.type.MetaTypes.SORT_ASCENDING;
@@ -265,6 +264,8 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	@SuppressWarnings("boxing")
 	public QueryResult<T> execute() throws StorageException
 	{
+		long t = System.currentTimeMillis();
+
 		try
 		{
 			if (aQueryStatement != null)
@@ -272,27 +273,9 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 				aQueryStatement.close();
 			}
 
-			int    nOffset = get(QUERY_OFFSET);
-			String sPaging = "";
+			int nOffset = get(QUERY_OFFSET);
 
-			if (sOrderCriteria.length() > 0 && hasRelation(QUERY_LIMIT))
-			{
-				sPaging = rStorage.get(SQL_QUERY_PAGING_EXPRESSION);
-
-				if (sPaging != null)
-				{
-					int nLimit = Math.min(get(QUERY_LIMIT), size());
-
-					sPaging = String.format(" " + sPaging, nLimit, nOffset);
-					nOffset = 0;
-				}
-				else
-				{
-					sPaging = "";
-				}
-			}
-
-			aQueryStatement = prepareQueryStatement(sPaging);
+			aQueryStatement = prepareQueryStatement();
 
 			Log.debugf("QueryParams: %s", aCompareValues);
 			setQueryParameters(aQueryStatement);
@@ -301,6 +284,26 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 			boolean   bChildQuery =
 				pQuery.hasFlag(JDBC_CHILD_QUERY) ||
 				pQuery.hasFlag(IS_CHILD_QUERY);
+
+			t = System.currentTimeMillis() - t;
+
+			if (t > 1000)
+			{
+				if (t > 3000)
+				{
+					Log.warnf("Very high query time: %d.%03d for %s\n",
+							  t / 1000,
+							  t % 1000,
+							  aQueryStatement);
+				}
+				else
+				{
+					Log.infof("High query time: %d.%03d for %s\n",
+							  t / 1000,
+							  t % 1000,
+							  aQueryStatement);
+				}
+			}
 
 			aCurrentResult =
 				new JdbcQueryResult<T>(rStorage,
@@ -1028,16 +1031,11 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	 * Therefore it must also contain the corresponding keywords "WHERE" and an
 	 * "ORDER BY" for each of these parts.
 	 *
-	 * @param  sAdditionalExpressions An optional string with additional
-	 *                                expressions to append to the SQL statement
-	 *                                (empty for none)
-	 *
 	 * @return The prepared statement for this query
 	 *
 	 * @throws StorageException If preparing the statement fails
 	 */
-	PreparedStatement prepareQueryStatement(String sAdditionalExpressions)
-		throws StorageException
+	PreparedStatement prepareQueryStatement() throws StorageException
 	{
 		try
 		{
@@ -1046,7 +1044,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 								getColumnList(rMapping),
 								rStorage.getSqlName(rMapping, true));
 
-			sSql += sQueryCriteria + sOrderCriteria + sAdditionalExpressions;
+			sSql += sQueryCriteria + sOrderCriteria;
 
 			Log.debug("Query: " + sSql);
 

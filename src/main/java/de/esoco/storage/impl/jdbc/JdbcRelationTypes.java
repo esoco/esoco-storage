@@ -73,16 +73,28 @@ public class JdbcRelationTypes
 		newDefaultValueType('"');
 
 	/**
-	 * The SQL expression that can be used to limit the number and offset of
-	 * rows in a query to support paging through the queried data. If set the
-	 * expression will be appended to queries that have an ORDER BY clause. It
-	 * must be parseable by {@link String#format(String, Object...)} and accept
-	 * two integer parameters. The first will be the query count limit and the
-	 * second the query offset. The default value is 'LIMIT %d OFFSET %d'. To
-	 * disable paging support this parameter must be set to NULL.
+	 * The SQL expression that can be used to set the offset of the first in a
+	 * query to support paging through the queried data. If set the expression
+	 * will be appended to queries that have an ORDER BY clause. It must be
+	 * parseable by {@link String#format(String, Object...)} with a single
+	 * integer variable (%d) for the query offset. If not set the relation will
+	 * be initialized to the standard SQL OFFSET clause. To disable paging
+	 * support this parameter must be set to NULL.
 	 */
 	public static final RelationType<String> SQL_QUERY_PAGING_EXPRESSION =
-		newDefaultValueType("LIMIT %d OFFSET %d");
+		newDefaultValueType("OFFSET %d");
+
+	/**
+	 * The SQL expression that can be used to limit the number of rows returned
+	 * by a query. If set it will be used for paging queries in conjunction with
+	 * the relation {@link #SQL_QUERY_PAGING_EXPRESSION}.It must be parseable by
+	 * {@link String#format(String, Object...)} with a single integer variable
+	 * (%d) for the query limit. If not set the relation will be initialized to
+	 * the standard SQL LIMIT clause. To disable paging support this parameter
+	 * must be set to NULL.
+	 */
+	public static final RelationType<String> SQL_QUERY_LIMIT_EXPRESSION =
+		newDefaultValueType("LIMIT %d");
 
 	/**
 	 * A mapping from datatype classes to the corresponding SQL datatype

@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_AUTO_IDENTITY_DAT
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_DATATYPE_MAP;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_FUZZY_SEARCH_FUNCTION;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_IDENTITIFIER_QUOTE;
+import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_LIMIT_EXPRESSION;
+import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_PAGING_EXPRESSION;
 
 
 /********************************************************************
@@ -117,6 +119,8 @@ public abstract class JdbcStorageDefinition extends StorageDefinition
 		{
 			aParameters.set(SQL_AUTO_IDENTITY_DATATYPE, "SERIAL");
 			aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, "dmetaphone");
+			aParameters.set(SQL_QUERY_PAGING_EXPRESSION, null);
+			aParameters.set(SQL_QUERY_LIMIT_EXPRESSION, null);
 			aParameters.get(SQL_DATATYPE_MAP).put(String.class, "TEXT");
 			aParameters.get(SQL_DATATYPE_MAP).put(byte[].class, "BYTEA");
 		}
