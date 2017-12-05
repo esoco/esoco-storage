@@ -93,7 +93,7 @@ public class StoragePredicates
 	{
 		if (sFilter.indexOf('*') == -1)
 		{
-			sFilter += "%";
+			sFilter = "%" + sFilter + "%";
 		}
 
 		sFilter = StorageManager.convertToSqlConstraint(sFilter);
