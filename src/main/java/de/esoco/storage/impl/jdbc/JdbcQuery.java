@@ -37,6 +37,7 @@ import de.esoco.lib.expression.predicate.FunctionPredicate;
 import de.esoco.lib.expression.predicate.PredicateJoin;
 import de.esoco.lib.logging.Log;
 import de.esoco.lib.manage.Closeable;
+import de.esoco.lib.property.SortDirection;
 
 import de.esoco.storage.Query;
 import de.esoco.storage.QueryPredicate;
@@ -73,7 +74,7 @@ import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.JDBC_CHILD_QUERY;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_DISABLE_CHILD_COUNTS;
 import static de.esoco.storage.impl.jdbc.JdbcStorage.formatStatement;
 
-import static org.obrel.type.MetaTypes.SORT_ASCENDING;
+import static org.obrel.type.MetaTypes.SORT_DIRECTION;
 
 
 /********************************************************************
@@ -462,7 +463,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 
 				aCriteria.append(rStorage.getSqlName(rAttr, true));
 
-				if (!rPredicate.hasFlag(SORT_ASCENDING))
+				if (rPredicate.get(SORT_DIRECTION) == SortDirection.DESCENDING)
 				{
 					aCriteria.append(" DESC");
 				}
@@ -799,7 +800,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 								  ElementPredicate<?, ?>  pElement,
 								  StringBuilder			  rResult)
 	{
-		if (pElement.hasRelation(SORT_ASCENDING))
+		if (pElement.get(SORT_DIRECTION) != null)
 		{
 			aSortPredicates.add(pElement);
 		}

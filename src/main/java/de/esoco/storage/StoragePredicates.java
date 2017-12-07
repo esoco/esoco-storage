@@ -25,6 +25,7 @@ import de.esoco.lib.expression.function.GetElement;
 import de.esoco.lib.expression.function.GetElement.ReadField;
 import de.esoco.lib.expression.predicate.Comparison;
 import de.esoco.lib.expression.predicate.ElementPredicate;
+import de.esoco.lib.property.SortDirection;
 import de.esoco.lib.reflect.ReflectUtil;
 
 import de.esoco.storage.impl.jdbc.JdbcStorage;
@@ -37,7 +38,7 @@ import org.obrel.core.RelationType;
 
 import static de.esoco.storage.StorageRelationTypes.STORAGE_FUNCTION;
 
-import static org.obrel.type.MetaTypes.SORT_ASCENDING;
+import static org.obrel.type.MetaTypes.SORT_DIRECTION;
 
 
 /********************************************************************
@@ -267,7 +268,9 @@ public class StoragePredicates
 	public static <T> SortPredicate<T> sortBy(String  sField,
 											  boolean bAscending)
 	{
-		return new SortPredicate<>(sField, bAscending);
+		return new SortPredicate<>(sField,
+								   bAscending ? SortDirection.ASCENDING
+											  : SortDirection.DESCENDING);
 	}
 
 	/***************************************
@@ -284,7 +287,9 @@ public class StoragePredicates
 		RelationType<?> rProperty,
 		boolean			bAscending)
 	{
-		return new SortPredicate<>(rProperty, bAscending);
+		return new SortPredicate<>(rProperty,
+								   bAscending ? SortDirection.ASCENDING
+											  : SortDirection.DESCENDING);
 	}
 
 	//~ Inner Classes ----------------------------------------------------------
@@ -458,11 +463,11 @@ public class StoragePredicates
 		 * Creates a new instance for a certain field in the target class.
 		 *
 		 * @param sField     The name of the field
-		 * @param bAscending TRUE for an ascending sort, FALSE for descending
+		 * @param eDirection The sort direction
 		 */
-		public SortPredicate(String sField, boolean bAscending)
+		public SortPredicate(String sField, SortDirection eDirection)
 		{
-			this(new ReadField<T, Object>(sField), bAscending);
+			this(new ReadField<T, Object>(sField), eDirection);
 		}
 
 		/***************************************
@@ -470,17 +475,17 @@ public class StoragePredicates
 		 *
 		 * @param fSortElement The function to access the element that defines
 		 *                     the sort order
-		 * @param bAscending   TRUE for an ascending sort, FALSE for descending
+		 * @param eDirection   The sort direction
 		 */
 		@SuppressWarnings({ "unchecked", "boxing" })
 		public SortPredicate(
 			ElementAccessFunction<?, ? super T, ?> fSortElement,
-			boolean								   bAscending)
+			SortDirection						   eDirection)
 		{
 			super((ElementAccessFunction<?, ? super T, Object>) fSortElement,
 				  Predicates.alwaysTrue());
 
-			set(SORT_ASCENDING, bAscending);
+			set(SORT_DIRECTION, eDirection);
 		}
 	}
 }
