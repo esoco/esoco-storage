@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -250,9 +250,9 @@ public class StoragePredicates
 	 * @see #sortBy(RelationType, boolean)
 	 */
 	public static <T extends Relatable> SortPredicate<T> sortBy(
-		RelationType<?> rProperty)
+		RelationType<?> rType)
 	{
-		return sortBy(rProperty, true);
+		return sortBy(rType, true);
 	}
 
 	/***************************************
@@ -278,16 +278,16 @@ public class StoragePredicates
 	 * that is defined by a relation type. The returned predicate only has a
 	 * declarative purpose and will therefore always evaluate to TRUE.
 	 *
-	 * @param  rProperty  The type of the property to sort by
+	 * @param  rType      The type of the property to sort by
 	 * @param  bAscending TRUE for ascending sort order, FALSE for descending
 	 *
 	 * @return A new sort predicate
 	 */
 	public static <T extends Relatable> SortPredicate<T> sortBy(
-		RelationType<?> rProperty,
+		RelationType<?> rType,
 		boolean			bAscending)
 	{
-		return new SortPredicate<>(rProperty,
+		return new SortPredicate<>(rType,
 								   bAscending ? SortDirection.ASCENDING
 											  : SortDirection.DESCENDING);
 	}
