@@ -268,9 +268,26 @@ public class StoragePredicates
 	public static <T> SortPredicate<T> sortBy(String  sField,
 											  boolean bAscending)
 	{
-		return new SortPredicate<>(sField,
-								   bAscending ? SortDirection.ASCENDING
-											  : SortDirection.DESCENDING);
+		return sortBy(sField,
+					  bAscending ? SortDirection.ASCENDING
+								 : SortDirection.DESCENDING);
+	}
+
+	/***************************************
+	 * Creates a new predicate that defines a sort order for a certain field.
+	 * The returned predicate only has a declarative purpose and will therefore
+	 * always evaluate to TRUE.
+	 *
+	 * @param  sField     The name of the field to sort by
+	 * @param  eDirection The sort direction
+	 *
+	 * @return A new sort predicate
+	 */
+	public static <T> SortPredicate<T> sortBy(
+		String		  sField,
+		SortDirection eDirection)
+	{
+		return new SortPredicate<>(sField, eDirection);
 	}
 
 	/***************************************
@@ -287,9 +304,26 @@ public class StoragePredicates
 		RelationType<?> rType,
 		boolean			bAscending)
 	{
-		return new SortPredicate<>(rType,
-								   bAscending ? SortDirection.ASCENDING
-											  : SortDirection.DESCENDING);
+		return sortBy(rType,
+					  bAscending ? SortDirection.ASCENDING
+								 : SortDirection.DESCENDING);
+	}
+
+	/***************************************
+	 * Creates a new predicate that defines a sort order for a certain property
+	 * that is defined by a relation type. The returned predicate only has a
+	 * declarative purpose and will therefore always evaluate to TRUE.
+	 *
+	 * @param  rType      The type of the property to sort by
+	 * @param  eDirection The sort direction
+	 *
+	 * @return A new sort predicate
+	 */
+	public static <T extends Relatable> SortPredicate<T> sortBy(
+		RelationType<?> rType,
+		SortDirection   eDirection)
+	{
+		return new SortPredicate<>(rType, eDirection);
 	}
 
 	//~ Inner Classes ----------------------------------------------------------
