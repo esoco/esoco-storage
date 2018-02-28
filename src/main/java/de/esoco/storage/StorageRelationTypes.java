@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,9 +134,11 @@ public class StorageRelationTypes
 
 	/**
 	 * Can be set on a storage query to limit the number of records that will be
-	 * returned by the query.
+	 * returned by the query. The default value is zero for no limit.
 	 */
-	public static final RelationType<Integer> QUERY_LIMIT = newType();
+	@SuppressWarnings("boxing")
+	public static final RelationType<Integer> QUERY_LIMIT =
+		newDefaultValueType(0);
 
 	/** A generic relation to a storage {@link Query}. */
 	public static final RelationType<Query<?>> STORAGE_QUERY = newType();

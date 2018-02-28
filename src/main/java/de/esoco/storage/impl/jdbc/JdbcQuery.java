@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -265,7 +265,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	@SuppressWarnings("boxing")
 	public QueryResult<T> execute() throws StorageException
 	{
-		long t = System.currentTimeMillis();
+		long nStart = System.currentTimeMillis();
 
 		try
 		{
@@ -273,8 +273,6 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 			{
 				aQueryStatement.close();
 			}
-
-			int nOffset = get(QUERY_OFFSET);
 
 			aQueryStatement = prepareQueryStatement();
 
@@ -286,31 +284,13 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 				pQuery.hasFlag(JDBC_CHILD_QUERY) ||
 				pQuery.hasFlag(IS_CHILD_QUERY);
 
-			t = System.currentTimeMillis() - t;
-
-			if (t > 1000)
-			{
-				if (t > 3000)
-				{
-					Log.warnf("Very high query time: %d.%03d for %s\n",
-							  t / 1000,
-							  t % 1000,
-							  aQueryStatement);
-				}
-				else
-				{
-					Log.infof("High query time: %d.%03d for %s\n",
-							  t / 1000,
-							  t % 1000,
-							  aQueryStatement);
-				}
-			}
+			checkLogLongQuery(nStart);
 
 			aCurrentResult =
 				new JdbcQueryResult<T>(rStorage,
 									   rMapping,
 									   rResultSet,
-									   nOffset,
+									   0,
 									   bChildQuery);
 
 			if (hasRelation(QUERY_DEPTH))
@@ -1036,18 +1016,34 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 	 *
 	 * @throws StorageException If preparing the statement fails
 	 */
+	@SuppressWarnings("boxing")
 	PreparedStatement prepareQueryStatement() throws StorageException
 	{
 		try
 		{
-			String sSql =
-				formatStatement(SELECT_TEMPLATE,
-								getColumnList(rMapping),
-								rStorage.getSqlName(rMapping, true));
+			int nOffset = get(QUERY_OFFSET);
+			int nLimit  = get(QUERY_LIMIT);
 
-			sSql += sQueryCriteria + sOrderCriteria;
+			StringBuilder aSql =
+				new StringBuilder(formatStatement(SELECT_TEMPLATE,
+												  getColumnList(rMapping),
+												  rStorage.getSqlName(rMapping,
+																	  true)));
 
-			Log.debug("Query: " + sSql);
+			aSql.append(sQueryCriteria);
+			aSql.append(sOrderCriteria);
+
+			if (nOffset > 0)
+			{
+				aSql.append(" OFFSET ").append(nOffset);
+			}
+
+			if (nLimit > 0)
+			{
+				aSql.append(" LIMIT ").append(nLimit);
+			}
+
+			Log.debug("Query: " + aSql);
 
 			Connection		  rConnection = rStorage.getConnection();
 			PreparedStatement aStatement;
@@ -1056,13 +1052,13 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 				.supportsResultSetType(ResultSet.TYPE_SCROLL_INSENSITIVE))
 			{
 				aStatement =
-					rConnection.prepareStatement(sSql,
+					rConnection.prepareStatement(aSql.toString(),
 												 ResultSet.TYPE_SCROLL_INSENSITIVE,
 												 ResultSet.CONCUR_READ_ONLY);
 			}
 			else
 			{
-				aStatement = rConnection.prepareStatement(sSql);
+				aStatement = rConnection.prepareStatement(aSql.toString());
 			}
 
 			return aStatement;
@@ -1116,6 +1112,36 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 		}
 
 		return nIndex;
+	}
+
+	/***************************************
+	 * Checks whether certain query duration thresholds have been exceeded and
+	 * logs them if necessary.
+	 *
+	 * @param nStartTime The start time in milliseconds
+	 */
+	@SuppressWarnings("boxing")
+	private void checkLogLongQuery(long nStartTime)
+	{
+		long nDuration = System.currentTimeMillis() - nStartTime;
+
+		if (nDuration > 1000)
+		{
+			if (nDuration > 3000)
+			{
+				Log.warnf("Very high query time: %d.%03d for %s\n",
+						  nDuration / 1000,
+						  nDuration % 1000,
+						  aQueryStatement);
+			}
+			else
+			{
+				Log.infof("High query time: %d.%03d for %s\n",
+						  nDuration / 1000,
+						  nDuration % 1000,
+						  aQueryStatement);
+			}
+		}
 	}
 
 	/***************************************
