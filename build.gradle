@@ -15,7 +15,7 @@ dependencies {
 	}
 	else
 	{
-		compile 'de.esoco:esoco-lib:1.1.+'
+		compile 'de.esoco:esoco-lib:1.2.+'
 	}
 
     testCompile 'junit:junit:4.+'
