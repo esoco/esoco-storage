@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,13 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
-import java.io.IOException;
-
-
 /********************************************************************
- * The class for exceptions that are thrown by {@link Storage} implementations.
+ * A runtime exception that is thrown by errors in {@link Storage}
+ * implementations.
  *
  * @author eso
  */
-public class StorageException extends IOException
+public class StorageException extends RuntimeException
 {
 	//~ Static fields/initializers ---------------------------------------------
 
