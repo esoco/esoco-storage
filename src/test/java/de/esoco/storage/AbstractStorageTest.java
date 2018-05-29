@@ -38,7 +38,7 @@ import static de.esoco.lib.expression.Predicates.equalTo;
 import static de.esoco.lib.expression.Predicates.greaterOrEqual;
 import static de.esoco.lib.expression.Predicates.lessThan;
 
-import static de.esoco.storage.StoragePredicates.almostLike;
+import static de.esoco.storage.StoragePredicates.similarTo;
 import static de.esoco.storage.StoragePredicates.forType;
 import static de.esoco.storage.StoragePredicates.hasChild;
 import static de.esoco.storage.StoragePredicates.ifField;
@@ -257,7 +257,7 @@ public abstract class AbstractStorageTest
 	public void testQueryAlmostLike() throws StorageException
 	{
 		Predicate<Object> pWithNameLikeJones =
-			ifField("name", almostLike("jones"));
+			ifField("name", similarTo("jones"));
 
 		Query<TestRecord> qJones =
 			rStorage.query(forType(TestRecord.class, pWithNameLikeJones));

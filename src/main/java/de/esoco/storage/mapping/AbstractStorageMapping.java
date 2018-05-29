@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2016 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@ import de.esoco.storage.Storage;
 import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageManager;
 import de.esoco.storage.StorageMapping;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -108,6 +111,13 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 					{
 						rValue = Integer.valueOf((int) nLong);
 					}
+				}
+				else if (rDatatype == BigInteger.class &&
+						 rValue instanceof BigDecimal)
+				{
+					// large integer attributes may be stored as decimal values
+					// without a fraction (e.g. SQL NUMERIC type)
+					rValue = ((BigDecimal) rValue).toBigIntegerExact();
 				}
 			}
 

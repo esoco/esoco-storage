@@ -61,22 +61,6 @@ public class StoragePredicates
 	//~ Static methods ---------------------------------------------------------
 
 	/***************************************
-	 * Returns a predicate that matches if the target attribute is like a
-	 * certain value after applying a SQL function. This is typically used to
-	 * use fuzzy search functions in queries. Because these functions are mostly
-	 * database-dependent the function name must be given as a string. Common
-	 * examples for fuzzy matching functions are "soundex" or "metaphone".
-	 *
-	 * @param  sValue The compare value
-	 *
-	 * @return A new instance of {@link Like}
-	 */
-	public static BinaryPredicate<Object, String> almostLike(String sValue)
-	{
-		return new Like(sValue, true);
-	}
-
-	/***************************************
 	 * Creates a wildcard filter predicate for a SQL like expression. The filter
 	 * string may contain wildcard characters like '*' or '?' (or their SQL
 	 * equivalents). If the filter string doesn't contain a '*' wildcard one
@@ -149,10 +133,10 @@ public class StoragePredicates
 	 *
 	 * @return A new element predicate with the given parameters
 	 */
-	public static <T, A extends Relatable> ElementPredicate<T, Object> ifAttribute(
-		StorageMapping<T, A, ?> rMapping,
-		A						rAttribute,
-		Predicate<Object>		pValueCriteria)
+	public static <T, A extends Relatable> ElementPredicate<T, Object>
+	ifAttribute(StorageMapping<T, A, ?> rMapping,
+				A						rAttribute,
+				Predicate<Object>		pValueCriteria)
 	{
 		return new ElementPredicate<T, Object>(new GetAttribute<T, A>(rMapping,
 																	  rAttribute),
@@ -231,6 +215,21 @@ public class StoragePredicates
 		pRefersTo.set(STORAGE_FUNCTION, fReferencedAttr);
 
 		return pRefersTo;
+	}
+
+	/***************************************
+	 * Returns a predicate that matches if the target attribute is similar to a
+	 * certain value ("fuzzy" search). The similarity is determined by applying
+	 * a SQL function. This function is defined from the storage parameters when
+	 * creating a new storage instance.
+	 *
+	 * @param  sValue The compare value
+	 *
+	 * @return A new instance of {@link Like}
+	 */
+	public static BinaryPredicate<Object, String> similarTo(String sValue)
+	{
+		return new Like(sValue, true);
 	}
 
 	/***************************************
@@ -404,7 +403,8 @@ public class StoragePredicates
 		 * Creates a new instance for a certain pattern.
 		 *
 		 * @param sSqlPattern  The SQL LIKE pattern to compare input values with
-		 * @param bFuzzySearch bImmutable TRUE for an immutable instance
+		 * @param bFuzzySearch TRUE for a fuzzy search that also finds similar
+		 *                     terms
 		 */
 		public Like(String sSqlPattern, boolean bFuzzySearch)
 		{
