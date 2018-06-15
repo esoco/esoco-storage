@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,6 +178,21 @@ public class StorageManager
 		}
 
 		return rMapping;
+	}
+
+	/***************************************
+	 * Returns the storage mapping factory for a certain base class.
+	 *
+	 * @param  rBaseClass The base class to register the factory for
+	 *
+	 * @return The mapping factory or NULL if none has been registered yet
+	 *
+	 * @see    #registerMappingFactory(Class, MappingFactory)
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> MappingFactory<T> getMappingFactory(Class<T> rBaseClass)
+	{
+		return (MappingFactory<T>) aMappingFactoryRegistry.get(rBaseClass);
 	}
 
 	/***************************************
