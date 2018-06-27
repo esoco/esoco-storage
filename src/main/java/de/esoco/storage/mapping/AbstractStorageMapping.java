@@ -91,6 +91,11 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 
 			if (rDatatype != String.class)
 			{
+				if (rDatatype.isPrimitive())
+				{
+					rDatatype = ReflectUtil.getWrapperType(rDatatype);
+				}
+
 				if (rValue instanceof String)
 				{
 					rValue =
@@ -98,19 +103,9 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 										 rDatatype,
 										 (String) rValue);
 				}
-				else if (rDatatype == Integer.class && rValue instanceof Long)
+				else if (rDatatype == Long.class && rValue instanceof Number)
 				{
-					// map long values to integer if value is in the integer range
-					// this is a fix for MySQL which produces long IDs in views
-					// under some circumstances
-
-					long nLong = ((Long) rValue).longValue();
-
-					if (nLong <= Integer.MAX_VALUE &&
-						nLong >= Integer.MIN_VALUE)
-					{
-						rValue = Integer.valueOf((int) nLong);
-					}
+					rValue = ((Number) rValue).longValue();
 				}
 				else if (rDatatype == BigInteger.class &&
 						 rValue instanceof BigDecimal)
@@ -122,11 +117,6 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 			}
 
 			Class<?> rValueType = rValue.getClass();
-
-			if (rDatatype.isPrimitive())
-			{
-				rDatatype = ReflectUtil.getWrapperType(rDatatype);
-			}
 
 			if (!rDatatype.isAssignableFrom(rValueType))
 			{
