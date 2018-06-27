@@ -21,6 +21,7 @@ import de.esoco.storage.StorageDefinition;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -32,6 +33,7 @@ import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_AUTO_IDENTITY_DAT
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_DATATYPE_MAP;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_FUZZY_SEARCH_FUNCTION;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_IDENTITIFIER_QUOTE;
+import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_LONG_AUTO_IDENTITY_DATATYPE;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_LIMIT_EXPRESSION;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_PAGING_EXPRESSION;
 
@@ -111,38 +113,39 @@ public abstract class JdbcStorageDefinition extends StorageDefinition
 	protected Relatable getDatabaseParameters(Connection rConnection)
 		throws SQLException
 	{
-		Relatable aParameters = new RelatedObject();
+		Relatable aParameters    = new RelatedObject();
+		String    sFuzzyFunction = System.getProperty("storage.sql.fuzzy");
+
+		if (sFuzzyFunction == null)
+		{
+			sFuzzyFunction = "soundex";
+		}
 
 		String sDatabaseName =
 			rConnection.getMetaData().getDatabaseProductName().toLowerCase();
 
+		Map<Class<?>, String> rDatatypeMap = aParameters.get(SQL_DATATYPE_MAP);
+
 		if (sDatabaseName.contains("postgres"))
 		{
+			sFuzzyFunction = "dmetaphone";
+
 			aParameters.set(SQL_AUTO_IDENTITY_DATATYPE, "SERIAL");
-			aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, "dmetaphone");
+			aParameters.set(SQL_LONG_AUTO_IDENTITY_DATATYPE, "BIGSERIAL");
 			aParameters.set(SQL_QUERY_PAGING_EXPRESSION, null);
 			aParameters.set(SQL_QUERY_LIMIT_EXPRESSION, null);
-			aParameters.get(SQL_DATATYPE_MAP).put(String.class, "TEXT");
-			aParameters.get(SQL_DATATYPE_MAP).put(byte[].class, "BYTEA");
+
+			rDatatypeMap.put(String.class, "TEXT");
+			rDatatypeMap.put(byte[].class, "BYTEA");
 		}
 		else if (sDatabaseName.contains("mysql") ||
 				 sDatabaseName.contains("mariadb"))
 		{
 			aParameters.set(SQL_IDENTITIFIER_QUOTE, '`');
-			aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, "soundex");
-			aParameters.get(SQL_DATATYPE_MAP).put(String.class, "TEXT");
-		}
-		else if (sDatabaseName.contains("h2"))
-		{
-			aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, "soundex");
+			rDatatypeMap.put(String.class, "TEXT");
 		}
 
-		String sFuzzyFunction = System.getProperty("storage.sql.fuzzy");
-
-		if (sFuzzyFunction != null)
-		{
-			aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, sFuzzyFunction);
-		}
+		aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, sFuzzyFunction);
 
 		return aParameters;
 	}

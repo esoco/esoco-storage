@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,14 +55,22 @@ public class JdbcRelationTypes
 	public static final RelationType<String> SQL_DATATYPE = newType();
 
 	/**
-	 * Contains the expression that is necessary to declare the identity
-	 * datatype in CREATE TABLE statements of a certain database. This is used
-	 * by the method {@link
-	 * JdbcStorage#initObjectStorage(de.esoco.storage.StorageMapping)}. The
-	 * default value is the standard SQL expression 'INTEGER AUTO_INCREMENT'.
+	 * Contains the expression that is necessary to declare an integer identity
+	 * datatype in CREATE TABLE statements. This is used by {@link JdbcStorage}
+	 * when initializing the object storage. The default value is the standard
+	 * SQL expression 'INTEGER AUTO_INCREMENT'.
 	 */
 	public static final RelationType<String> SQL_AUTO_IDENTITY_DATATYPE =
 		newDefaultValueType("INTEGER AUTO_INCREMENT");
+
+	/**
+	 * Contains the expression that is necessary to declare a long integer
+	 * identity datatype in CREATE TABLE statements. This is used by {@link
+	 * JdbcStorage} when initializing the object storage. The default value is
+	 * the standard SQL expression 'BIGINT AUTO_INCREMENT'.
+	 */
+	public static final RelationType<String> SQL_LONG_AUTO_IDENTITY_DATATYPE =
+		newDefaultValueType("BIGINT AUTO_INCREMENT");
 
 	/**
 	 * The character that is used to quote identifiers in SQL statement.
