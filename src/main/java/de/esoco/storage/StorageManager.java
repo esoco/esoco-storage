@@ -423,6 +423,14 @@ public class StorageManager
 	 */
 	public static void shutdown()
 	{
+		Map<StorageDefinition, Storage> rStorageMap = aThreadStorages.get();
+
+		if (rStorageMap != null)
+		{
+			// release storage of main application thread
+			rStorageMap.values().forEach(Storage::release);
+		}
+
 		aThreadStorages = null;
 	}
 
