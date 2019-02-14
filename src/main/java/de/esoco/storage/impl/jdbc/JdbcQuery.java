@@ -651,7 +651,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable
 
 		if (pCriteria instanceof Predicates.Not<?>)
 		{
-			pCriteria = ((Predicates.Not<?>) pCriteria).getPredicate();
+			pCriteria = ((Predicates.Not<?>) pCriteria).getInvertedPredicate();
 			bNegate   = true;
 
 			rResult.append(SQL_NEGATION);

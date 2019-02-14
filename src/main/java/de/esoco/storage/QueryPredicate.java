@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2015 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package de.esoco.storage;
 
 import de.esoco.lib.expression.Predicate;
-import de.esoco.lib.expression.function.AbstractFunction;
-import de.esoco.lib.expression.predicate.AbstractPredicate;
+
+import org.obrel.core.RelatedObject;
 
 
 /********************************************************************
@@ -29,7 +29,7 @@ import de.esoco.lib.expression.predicate.AbstractPredicate;
  *
  * @author eso
  */
-public class QueryPredicate<T> extends AbstractPredicate<T>
+public class QueryPredicate<T> extends RelatedObject implements Predicate<T>
 {
 	//~ Instance fields --------------------------------------------------------
 
@@ -46,12 +46,33 @@ public class QueryPredicate<T> extends AbstractPredicate<T>
 	 */
 	public QueryPredicate(Class<T> rQueryType, Predicate<? super T> rCriteria)
 	{
-		super(String.format("Query(%s if %s)", rQueryType, rCriteria));
 		this.rQueryType = rQueryType;
 		this.rCriteria  = rCriteria;
 	}
 
 	//~ Methods ----------------------------------------------------------------
+
+	/***************************************
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object rObj)
+	{
+		if (this == rObj)
+		{
+			return true;
+		}
+
+		if (rObj == null || getClass() != rObj.getClass())
+		{
+			return false;
+		}
+
+		QueryPredicate<?> rOther = (QueryPredicate<?>) rObj;
+
+		return rQueryType == rOther.rQueryType &&
+			   rCriteria.equals(rOther.rCriteria);
+	}
 
 	/***************************************
 	 * Evaluates the argument value with the query criteria of this instance.
@@ -87,15 +108,11 @@ public class QueryPredicate<T> extends AbstractPredicate<T>
 	}
 
 	/***************************************
-	 * @see AbstractFunction#paramsEqual(AbstractFunction)
+	 * {@inheritDoc}
 	 */
 	@Override
-	protected boolean paramsEqual(AbstractFunction<?, ?> rOther)
+	public int hashCode()
 	{
-		QueryPredicate<?> rOtherPredicate = (QueryPredicate<?>) rOther;
-
-		return super.paramsEqual(rOther) &&
-			   rQueryType == rOtherPredicate.rQueryType &&
-			   rCriteria.equals(rOtherPredicate.rCriteria);
+		return 31 * (rQueryType.hashCode() + 31 * rCriteria.hashCode());
 	}
 }
