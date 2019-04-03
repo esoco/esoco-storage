@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import org.obrel.core.RelatedObject;
 import static de.esoco.storage.StorageRelationTypes.PERSISTENT;
 import static de.esoco.storage.StorageRelationTypes.QUERY_DEPTH;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_DEFINITION;
-import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_DISABLE_CHILD_COUNTS;
 
 
 /********************************************************************
@@ -155,7 +154,7 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 				int nResultSize = aResultSet.getMetaData().getColumnCount();
 
 				boolean bUseChildCounts =
-					!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS);
+					rStorage.isChildCountsEnabled(rMapping);
 
 				int nChildMappings = rMapping.getChildMappings().size();
 				int nColumns	   =
@@ -200,10 +199,11 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 
 					if (nQueryDepth > 0)
 					{
-						readChildren(rMapping,
-									 aResult,
-									 nQueryDepth - 1,
-									 aChildCounts);
+						readChildren(
+							rMapping,
+							aResult,
+							nQueryDepth - 1,
+							aChildCounts);
 					}
 				}
 
@@ -267,9 +267,9 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 		{
 			int    nCurrentMapping = 0;
 			Object aParentId	   =
-				rParentMapping.getAttributeValue(rParent,
-												 rParentMapping
-												 .getIdAttribute());
+				rParentMapping.getAttributeValue(
+					rParent,
+					rParentMapping.getIdAttribute());
 
 			for (final C rMapping : rChildMappings)
 			{
@@ -284,10 +284,11 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 						(StorageMapping<Object, Relatable, ?>) rMapping;
 
 					QueryPredicate<Object> pChildQuery =
-						JdbcQuery.createChildQueryPredicate(rParentMapping,
-															rChildMapping,
-															aParentId,
-															nDepth);
+						JdbcQuery.createChildQueryPredicate(
+							rParentMapping,
+							rChildMapping,
+							aParentId,
+							nDepth);
 
 					ElementInitializer<Object> aInitializer =
 						new ElementInitializer<Object>()
@@ -295,17 +296,19 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T>
 							@Override
 							public void initElements(List<Object> rChildren)
 							{
-								rParentMapping.initChildren(rParent,
-															rChildren,
-															rMapping);
+								rParentMapping.initChildren(
+									rParent,
+									rChildren,
+									rMapping);
 							}
 						};
 
 					List<Object> rChildren =
-						new QueryList<Object>(rStorage.get(STORAGE_DEFINITION),
-											  pChildQuery,
-											  nChildCount,
-											  aInitializer);
+						new QueryList<Object>(
+							rStorage.get(STORAGE_DEFINITION),
+							pChildQuery,
+							nChildCount,
+							aInitializer);
 
 					rParentMapping.setChildren(rParent, rChildren, rMapping);
 				}

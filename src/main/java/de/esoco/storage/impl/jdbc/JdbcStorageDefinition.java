@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 // limitations under the License.
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage.impl.jdbc;
+
+import de.esoco.lib.json.JsonObject;
 
 import de.esoco.storage.StorageDefinition;
 
@@ -137,6 +139,8 @@ public abstract class JdbcStorageDefinition extends StorageDefinition
 
 			rDatatypeMap.put(String.class, "TEXT");
 			rDatatypeMap.put(byte[].class, "BYTEA");
+			rDatatypeMap.put(Map.class, "HSTORE");
+			rDatatypeMap.put(JsonObject.class, "JSONB");
 		}
 		else if (sDatabaseName.contains("mysql") ||
 				 sDatabaseName.contains("mariadb"))

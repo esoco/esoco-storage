@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,7 +158,8 @@ public class JdbcStorage extends Storage
 			Collections.unmodifiableMap(aSqlDatatypeMap);
 	}
 
-	private static int nNextId = 1;
+	private static boolean bChildCountsEnabled = true;
+	private static int     nNextId			   = 1;
 
 	//~ Instance fields --------------------------------------------------------
 
@@ -207,6 +208,19 @@ public class JdbcStorage extends Storage
 	}
 
 	//~ Static methods ---------------------------------------------------------
+
+	/***************************************
+	 * Enables or disables the use of an additional and automatically managed
+	 * child counts field. This can also be done individually by setting a
+	 * static boolean property with the name "DISABLE_SQL_CHILD_COUNT" in an
+	 * entity to true.
+	 *
+	 * @param bEnabled The new child counts enabled
+	 */
+	public static void setChildCountsEnabled(boolean bEnabled)
+	{
+		bChildCountsEnabled = bEnabled;
+	}
 
 	/***************************************
 	 * Checks whether the given database contains a certain table.
@@ -279,8 +293,8 @@ public class JdbcStorage extends Storage
 	{
 		@SuppressWarnings("unchecked")
 		StorageMapping<Object, Relatable, ?> rMapping =
-			(StorageMapping<Object, Relatable, ?>) StorageManager.getMapping(rObject
-																			 .getClass());
+			(StorageMapping<Object, Relatable, ?>) StorageManager.getMapping(
+				rObject.getClass());
 
 		Relatable rIdAttribute = rMapping.getIdAttribute();
 		String    sTable	   = getSqlName(rMapping, true);
@@ -574,6 +588,21 @@ public class JdbcStorage extends Storage
 	}
 
 	/***************************************
+	 * Checks if the use of a child count field is enabled globally and for the
+	 * given mapping.
+	 *
+	 * @param  rMapping The mapping to check if child counts are enabled
+	 *                  globally
+	 *
+	 * @return TRUE if child counts are enabled
+	 */
+	final boolean isChildCountsEnabled(StorageMapping<?, ?, ?> rMapping)
+	{
+		return bChildCountsEnabled &&
+			   !rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS);
+	}
+
+	/***************************************
 	 * Maps a datatype class to the corresponding SQL datatype string.
 	 *
 	 * @param  rDatatype The datatype class
@@ -606,9 +635,10 @@ public class JdbcStorage extends Storage
 		if (sSqlDatatype == null)
 		{
 			sSqlDatatype = DEFAULT_STRING_DATATYPE;
-			Log.warnf("No datatype mapping for '%s', using '%s' as default",
-					  rDatatype,
-					  DEFAULT_STRING_DATATYPE);
+			Log.warnf(
+				"No datatype mapping for '%s', using '%s' as default",
+				rDatatype,
+				DEFAULT_STRING_DATATYPE);
 		}
 
 		return sSqlDatatype;
@@ -732,7 +762,7 @@ public class JdbcStorage extends Storage
 			throw new StorageException("No columns to insert: " + rMapping);
 		}
 
-		if (!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS))
+		if (isChildCountsEnabled(rMapping))
 		{
 			for (StorageMapping<?, ?, ?> rChildMapping :
 				 rMapping.getChildMappings())
@@ -804,7 +834,7 @@ public class JdbcStorage extends Storage
 			}
 		}
 
-		if (!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS))
+		if (isChildCountsEnabled(rMapping))
 		{
 			for (StorageMapping<?, ?, ?> rChildMapping :
 				 rMapping.getChildMappings())
@@ -816,8 +846,8 @@ public class JdbcStorage extends Storage
 
 		if (sObjectIdColumn != null)
 		{
-			aColumns.append(formatStatement(PRIMARY_KEY_TEMPLATE,
-											sObjectIdColumn));
+			aColumns.append(
+				formatStatement(PRIMARY_KEY_TEMPLATE, sObjectIdColumn));
 		}
 
 		for (Relatable rParentAttr : aParentAttr)
@@ -825,12 +855,12 @@ public class JdbcStorage extends Storage
 			StorageMapping<?, ?, ?> rParentMapping =
 				rParentAttr.get(STORAGE_MAPPING);
 
-			aColumns.append(formatStatement(FOREIGN_KEY_TEMPLATE,
-											getSqlName(rParentAttr, true),
-											getSqlName(rParentMapping, true),
-											getSqlName(rParentMapping
-													   .getIdAttribute(),
-													   true)));
+			aColumns.append(
+				formatStatement(
+					FOREIGN_KEY_TEMPLATE,
+					getSqlName(rParentAttr, true),
+					getSqlName(rParentMapping, true),
+					getSqlName(rParentMapping.getIdAttribute(), true)));
 		}
 
 		aColumns.setLength(aColumns.length() - 1);
@@ -849,9 +879,10 @@ public class JdbcStorage extends Storage
 			for (Relatable rAttr : aIndexedAttr)
 			{
 				sSql =
-					formatStatement(INDEX_TEMPLATE,
-									sTable,
-									getSqlName(rAttr, false));
+					formatStatement(
+						INDEX_TEMPLATE,
+						sTable,
+						getSqlName(rAttr, false));
 
 				Log.debug(sSql);
 
@@ -892,11 +923,12 @@ public class JdbcStorage extends Storage
 
 		if (aColumns.length() == 0 || aIdentity.length() == 0)
 		{
-			throw new StorageException("No columns or primary key for update: " +
-									   rMapping);
+			throw new StorageException(
+				"No columns or primary key for update: " +
+				rMapping);
 		}
 
-		if (!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS))
+		if (isChildCountsEnabled(rMapping))
 		{
 			for (StorageMapping<?, ?, ?> rChildMapping :
 				 rMapping.getChildMappings())
@@ -908,10 +940,11 @@ public class JdbcStorage extends Storage
 
 		aColumns.setLength(aColumns.length() - 1);
 
-		return formatStatement(UPDATE_TEMPLATE,
-							   getSqlName(rMapping, true),
-							   aColumns,
-							   aIdentity);
+		return formatStatement(
+			UPDATE_TEMPLATE,
+			getSqlName(rMapping, true),
+			aColumns,
+			aIdentity);
 	}
 
 	/***************************************
@@ -948,11 +981,12 @@ public class JdbcStorage extends Storage
 
 			if (rMapping != null)
 			{
-				setStatementParameters(aStatement,
-									   rMapping,
-									   rObject,
-									   bInsert,
-									   bGeneratedId);
+				setStatementParameters(
+					aStatement,
+					rMapping,
+					rObject,
+					bInsert,
+					bGeneratedId);
 			}
 
 			aStatement.executeUpdate();
@@ -969,10 +1003,11 @@ public class JdbcStorage extends Storage
 			if (rObject != null)
 			{
 				sMessage =
-					String.format("SQL %s failed for %s (%s",
-								  bInsert ? "insert" : "update",
-								  rObject,
-								  sSql);
+					String.format(
+						"SQL %s failed for %s (%s",
+						bInsert ? "insert" : "update",
+						rObject,
+						sSql);
 			}
 			else
 			{
@@ -1058,14 +1093,16 @@ public class JdbcStorage extends Storage
 					if (rDatatype == Long.class)
 					{
 						sSqlDatatype =
-							getAutoIdDatatype(rMapping,
-											  SQL_LONG_AUTO_IDENTITY_DATATYPE);
+							getAutoIdDatatype(
+								rMapping,
+								SQL_LONG_AUTO_IDENTITY_DATATYPE);
 					}
 					else
 					{
 						sSqlDatatype =
-							getAutoIdDatatype(rMapping,
-											  SQL_AUTO_IDENTITY_DATATYPE);
+							getAutoIdDatatype(
+								rMapping,
+								SQL_AUTO_IDENTITY_DATATYPE);
 					}
 				}
 				else
@@ -1075,8 +1112,9 @@ public class JdbcStorage extends Storage
 					if (sSqlDatatype.indexOf('%') >= 0)
 					{
 						sSqlDatatype =
-							String.format(sSqlDatatype,
-										  rColumnAttr.get(STORAGE_LENGTH));
+							String.format(
+								sSqlDatatype,
+								rColumnAttr.get(STORAGE_LENGTH));
 					}
 				}
 			}
@@ -1087,8 +1125,9 @@ public class JdbcStorage extends Storage
 			}
 			else
 			{
-				throw new StorageException("No SQL datatype mapping for: " +
-										   rColumnAttr);
+				throw new StorageException(
+					"No SQL datatype mapping for: " +
+					rColumnAttr);
 			}
 		}
 
@@ -1189,15 +1228,17 @@ public class JdbcStorage extends Storage
 
 				if (rIdAttribute.get(STORAGE_DATATYPE) == Long.class)
 				{
-					rMapping.setAttributeValue(rObject,
-											   rIdAttribute,
-											   nGeneratedKey);
+					rMapping.setAttributeValue(
+						rObject,
+						rIdAttribute,
+						nGeneratedKey);
 				}
 				else
 				{
-					rMapping.setAttributeValue(rObject,
-											   rIdAttribute,
-											   (int) nGeneratedKey);
+					rMapping.setAttributeValue(
+						rObject,
+						rIdAttribute,
+						(int) nGeneratedKey);
 				}
 
 				Log.debugf("Generated key %d for %s", nGeneratedKey, rObject);
@@ -1262,7 +1303,7 @@ public class JdbcStorage extends Storage
 			}
 		}
 
-		if (!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS))
+		if (isChildCountsEnabled(rMapping))
 		{
 			for (C rChildMapping : rMapping.getChildMappings())
 			{
@@ -1285,8 +1326,9 @@ public class JdbcStorage extends Storage
 			}
 			else
 			{
-				throw new StorageException("No identity attribute defined in " +
-										   rMapping);
+				throw new StorageException(
+					"No identity attribute defined in " +
+					rMapping);
 			}
 		}
 
@@ -1366,8 +1408,9 @@ public class JdbcStorage extends Storage
 						if (!rRefRelatable.hasRelation(STORING) &&
 							needsToBeStored(rRefRelatable))
 						{
-							rReferenceMapping.storeReference(rObject,
-															 rReference);
+							rReferenceMapping.storeReference(
+								rObject,
+								rReference);
 						}
 					}
 				}
