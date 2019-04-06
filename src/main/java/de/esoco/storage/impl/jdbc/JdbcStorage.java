@@ -58,6 +58,7 @@ import org.obrel.type.MetaTypes;
 import org.obrel.type.StandardTypes;
 
 import static de.esoco.storage.StorageRelationTypes.PERSISTENT;
+import static de.esoco.storage.StorageRelationTypes.REFERENCE_ATTRIBUTE;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_DATATYPE;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_LENGTH;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_MAPPING;
@@ -794,8 +795,8 @@ public class JdbcStorage extends Storage
 		throws StorageException
 	{
 		StringBuilder   aColumns	    = new StringBuilder();
-		List<Relatable> aParentAttr     = new ArrayList<>();
-		Set<Relatable>  aIndexedAttr    = new LinkedHashSet<>();
+		List<Relatable> aReferenceAttrs = new ArrayList<>();
+		Set<Relatable>  aIndexedAttrs   = new LinkedHashSet<>();
 		String		    sTableName	    = getSqlName(rMapping, true);
 		String		    sObjectIdColumn = null;
 
@@ -819,7 +820,7 @@ public class JdbcStorage extends Storage
 
 			if (rAttr.hasFlag(INDEXED))
 			{
-				aIndexedAttr.add(rAttr);
+				aIndexedAttrs.add(rAttr);
 			}
 
 			aColumns.append(',');
@@ -828,9 +829,10 @@ public class JdbcStorage extends Storage
 			{
 				sObjectIdColumn = sSqlName;
 			}
-			else if (rAttr.hasFlag(PARENT_ATTRIBUTE))
+			else if (rAttr.hasFlag(PARENT_ATTRIBUTE) ||
+					 rAttr.hasFlag(REFERENCE_ATTRIBUTE))
 			{
-				aParentAttr.add(rAttr);
+				aReferenceAttrs.add(rAttr);
 			}
 		}
 
@@ -850,17 +852,23 @@ public class JdbcStorage extends Storage
 				formatStatement(PRIMARY_KEY_TEMPLATE, sObjectIdColumn));
 		}
 
-		for (Relatable rParentAttr : aParentAttr)
+		for (Relatable rReferenceAttr : aReferenceAttrs)
 		{
-			StorageMapping<?, ?, ?> rParentMapping =
-				rParentAttr.get(STORAGE_MAPPING);
+			StorageMapping<?, ?, ?> rTargetMapping =
+				rReferenceAttr.get(STORAGE_MAPPING);
+
+			// exclude parent attributes to prevent recursion
+			if (!rReferenceAttr.hasFlag(PARENT_ATTRIBUTE))
+			{
+				initObjectStorage(rTargetMapping);
+			}
 
 			aColumns.append(
 				formatStatement(
 					FOREIGN_KEY_TEMPLATE,
-					getSqlName(rParentAttr, true),
-					getSqlName(rParentMapping, true),
-					getSqlName(rParentMapping.getIdAttribute(), true)));
+					getSqlName(rReferenceAttr, true),
+					getSqlName(rTargetMapping, true),
+					getSqlName(rTargetMapping.getIdAttribute(), true)));
 		}
 
 		aColumns.setLength(aColumns.length() - 1);
@@ -872,11 +880,11 @@ public class JdbcStorage extends Storage
 
 		executeUpdate(sSql, null, null, false, false);
 
-		if (aIndexedAttr.size() > 0)
+		if (aIndexedAttrs.size() > 0)
 		{
 			String sTable = getSqlName(rMapping, false);
 
-			for (Relatable rAttr : aIndexedAttr)
+			for (Relatable rAttr : aIndexedAttrs)
 			{
 				sSql =
 					formatStatement(

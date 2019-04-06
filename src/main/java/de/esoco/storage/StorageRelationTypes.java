@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,14 @@ public class StorageRelationTypes
 	 * different storage a copy of the original object must be created.
 	 */
 	public static final RelationType<Boolean> PERSISTENT = newFlagType();
+
+	/**
+	 * Indicates that an attribute references another object in the storage that
+	 * needs to be modeled (e.g. with a foreign key constraint in a relational
+	 * database).
+	 */
+	public static final RelationType<Boolean> REFERENCE_ATTRIBUTE =
+		newFlagType();
 
 	/**
 	 * Contains the generic storage name of an element. This name will be used
