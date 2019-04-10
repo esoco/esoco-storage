@@ -310,6 +310,34 @@ public class JdbcStorage extends Storage
 	}
 
 	/***************************************
+	 * Executes an arbitrary SQL update statement in this storage's connection.
+	 *
+	 * @param  sSql    The SQL update statement to execute
+	 * @param  rParams Optional parameters to be set on the prepared statement
+	 *
+	 * @throws StorageException If the statement execution fails
+	 */
+	public void executeUpdate(String sSql, Object... rParams)
+		throws StorageException
+	{
+		try (PreparedStatement aStatement = rConnection.prepareStatement(sSql))
+		{
+			int nParamIndex = 1;
+
+			for (Object rParam : rParams)
+			{
+				aStatement.setObject(nParamIndex++, rParam);
+			}
+
+			aStatement.executeUpdate();
+		}
+		catch (SQLException e)
+		{
+			throw new StorageException(e);
+		}
+	}
+
+	/***************************************
 	 * Returns the JDBC connection that is used by this instance.
 	 *
 	 * @return The JDBC connection of this instance
@@ -981,12 +1009,8 @@ public class JdbcStorage extends Storage
 		boolean								 bGeneratedId)
 		throws StorageException
 	{
-		PreparedStatement aStatement = null;
-
-		try
+		try (PreparedStatement aStatement = prepareStatement(sSql, bGeneratedId))
 		{
-			aStatement = prepareStatement(sSql, bGeneratedId);
-
 			if (rMapping != null)
 			{
 				setStatementParameters(
@@ -1024,20 +1048,6 @@ public class JdbcStorage extends Storage
 
 			Log.error(sMessage, e);
 			throw new StorageException(sMessage, e);
-		}
-		finally
-		{
-			if (aStatement != null)
-			{
-				try
-				{
-					aStatement.close();
-				}
-				catch (Exception e)
-				{
-					Log.warn("Could not close statement", e);
-				}
-			}
 		}
 	}
 
@@ -1287,9 +1297,9 @@ public class JdbcStorage extends Storage
 						   boolean								bIgnoreId)
 		throws SQLException, StorageException
 	{
-		List<Object> aParams		 = new ArrayList<Object>();
-		Object		 rIdentityValue  = null;
-		int			 nStatementIndex = 1;
+		List<Object> aParams	    = new ArrayList<Object>();
+		Object		 rIdentityValue = null;
+		int			 nParamIndex    = 1;
 
 		for (Relatable rAttr : rMapping.getAttributes())
 		{
@@ -1306,7 +1316,7 @@ public class JdbcStorage extends Storage
 
 			if (bSetParam)
 			{
-				rStatement.setObject(nStatementIndex++, rParam);
+				rStatement.setObject(nParamIndex++, rParam);
 				aParams.add(rParam);
 			}
 		}
@@ -1320,7 +1330,7 @@ public class JdbcStorage extends Storage
 
 				Integer aChildCount = Integer.valueOf(nChildren);
 
-				rStatement.setObject(nStatementIndex++, aChildCount);
+				rStatement.setObject(nParamIndex++, aChildCount);
 				aParams.add(aChildCount);
 			}
 		}
@@ -1329,7 +1339,7 @@ public class JdbcStorage extends Storage
 		{
 			if (rIdentityValue != null)
 			{
-				rStatement.setObject(nStatementIndex++, rIdentityValue);
+				rStatement.setObject(nParamIndex++, rIdentityValue);
 				aParams.add(rIdentityValue);
 			}
 			else
