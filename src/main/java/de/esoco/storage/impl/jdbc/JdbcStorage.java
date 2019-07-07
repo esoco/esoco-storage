@@ -577,11 +577,10 @@ public class JdbcStorage extends Storage
 	 *
 	 * <p>If no such relation exists it tries to read a relation of the type
 	 * {@link StorageRelationTypes#STORAGE_NAME} instead. If that exists neither
-	 * the result of the object's toString() method will be used. The resulting
-	 * name will be converted with {@link TextUtil#uppercaseIdentifier(String)}
-	 * that will finally be converted to lower case to create the SQL
-	 * identifier. It will then be stored and stored in a newly created SQL name
-	 * relation.</p>
+	 * the name will be generated from the object's toString() representation,
+	 * camel case converted with {@link TextUtil#uppercaseIdentifier(String)} to
+	 * words separated by underscores and then to lower case. Any name found
+	 * will then be stored in {@link JdbcRelationTypes#SQL_NAME}.</p>
 	 *
 	 * @param  rObject The object to return the SQL name for
 	 * @param  bQuoted TRUE to return the name in quotes for the current
@@ -600,10 +599,10 @@ public class JdbcStorage extends Storage
 
 			if (sName == null)
 			{
-				sName = rObject.toString();
+				sName =
+					TextUtil.uppercaseIdentifier(rObject.toString())
+							.toLowerCase();
 			}
-
-			sName = TextUtil.uppercaseIdentifier(sName).toLowerCase();
 
 			rRelatable.set(SQL_NAME, sName);
 		}
