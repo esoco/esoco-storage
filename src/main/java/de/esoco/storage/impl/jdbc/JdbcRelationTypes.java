@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.obrel.core.Annotations.RelationTypeNamespace;
 import org.obrel.core.RelationType;
+import org.obrel.core.RelationTypeModifier;
 import org.obrel.core.RelationTypes;
 
 import static org.obrel.core.RelationTypes.newDefaultValueType;
@@ -39,6 +40,9 @@ import static org.obrel.core.RelationTypes.newType;
 public class JdbcRelationTypes
 {
 	//~ Static fields/initializers ---------------------------------------------
+
+	// ~ Static fields/initializers
+	// ---------------------------------------------
 
 	/**
 	 * Contains the name to be used in SQL statements for the element on which
@@ -162,6 +166,49 @@ public class JdbcRelationTypes
 	}
 
 	//~ Static methods ---------------------------------------------------------
+
+	/***************************************
+	 * This is just an alias for {@link
+	 * RelationTypes#newType(org.obrel.core.RelationTypeModifier...)} which
+	 * exists as a semantic complement to {@link #column(String,
+	 * RelationTypeModifier...)}.
+	 *
+	 * @param  rModifiers The optional relation type modifiers modifiers
+	 *
+	 * @return The new relation type
+	 */
+	public static <T> RelationType<T> column(RelationTypeModifier... rModifiers)
+	{
+		return newType(rModifiers);
+	}
+
+	/***************************************
+	 * Creates a new relation type for a certain SQL column. This is just a
+	 * shortcut for annotating the relation type with {@link #SQL_NAME} but also
+	 * makes the generic declaration simpler due to the peculiarities of Java's
+	 * generic type system.
+	 *
+	 * <p>If additional parameters (like an initialization function) need to be
+	 * provided to the relation type declaration a standard factory method with
+	 * a standard annotation needs to be used instead (with a more verbose
+	 * generic declaration).</p>
+	 *
+	 * @param  sColumnName The SQL column name
+	 * @param  rModifiers  The optional relation type modifiers modifiers
+	 *
+	 * @return The new relation type
+	 */
+	public static <T> RelationType<T> column(
+		String					sColumnName,
+		RelationTypeModifier... rModifiers)
+	{
+		RelationType<T> aColumnType = newType(rModifiers);
+
+		return aColumnType.annotate(SQL_NAME, sColumnName);
+	}
+
+	// ~ Static methods
+	// ---------------------------------------------------------
 
 	/***************************************
 	 * Package-internal method to initialize the relation types that are defined
