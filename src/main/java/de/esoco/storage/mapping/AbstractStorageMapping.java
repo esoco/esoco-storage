@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2018 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,9 +99,10 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 				if (rValue instanceof String)
 				{
 					rValue =
-						parseStringValue(rAttribute,
-										 rDatatype,
-										 (String) rValue);
+						parseStringValue(
+							rAttribute,
+							rDatatype,
+							(String) rValue);
 				}
 				else if (rDatatype == Long.class && rValue instanceof Number)
 				{
@@ -121,9 +122,10 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 			if (!rDatatype.isAssignableFrom(rValueType))
 			{
 				String sMessage =
-					String.format("Attribute type mismatch: %s (expected: %s)",
-								  rValueType,
-								  rDatatype);
+					String.format(
+						"Attribute type mismatch: %s (expected: %s)",
+						rValueType,
+						rDatatype);
 
 				throw new IllegalArgumentException(sMessage);
 			}
@@ -229,8 +231,9 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 
 			if (rResult == null)
 			{
-				throw new IllegalStateException("Undefined RelationType " +
-												sValue);
+				throw new IllegalStateException(
+					"Undefined RelationType " +
+					sValue);
 			}
 		}
 		else if (rDatatype.isEnum())
@@ -240,7 +243,8 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 				sValue = sValue.substring(sValue.indexOf('-') + 1);
 			}
 
-			rResult = Enum.valueOf((Class<Enum>) rDatatype, sValue);
+			rResult =
+				Enum.valueOf((Class<Enum>) rDatatype, sValue.toUpperCase());
 		}
 		else if (rDatatype == Period.class)
 		{
@@ -249,19 +253,21 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 		else if (Collection.class.isAssignableFrom(rDatatype))
 		{
 			rResult =
-				parseCollection(sValue,
-								(Class<Collection<Object>>) rDatatype,
-								(Class<Object>) rAttribute.get(ELEMENT_DATATYPE),
-								rAttribute.hasFlag(ORDERED));
+				parseCollection(
+					sValue,
+					(Class<Collection<Object>>) rDatatype,
+					(Class<Object>) rAttribute.get(ELEMENT_DATATYPE),
+					rAttribute.hasFlag(ORDERED));
 		}
 		else if (Map.class.isAssignableFrom(rDatatype))
 		{
 			rResult =
-				parseMap(sValue,
-						 (Class<Map<Object, Object>>) rDatatype,
-						 (Class<Object>) rAttribute.get(KEY_DATATYPE),
-						 (Class<Object>) rAttribute.get(VALUE_DATATYPE),
-						 rAttribute.hasFlag(ORDERED));
+				parseMap(
+					sValue,
+					(Class<Map<Object, Object>>) rDatatype,
+					(Class<Object>) rAttribute.get(KEY_DATATYPE),
+					(Class<Object>) rAttribute.get(VALUE_DATATYPE),
+					rAttribute.hasFlag(ORDERED));
 		}
 		else
 		{
