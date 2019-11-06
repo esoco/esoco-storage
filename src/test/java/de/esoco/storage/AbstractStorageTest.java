@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // This file is a part of the 'esoco-storage' project.
-// Copyright 2017 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
+// Copyright 2019 Elmar Sonnenschein, esoco GmbH, Flensburg, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,11 +38,11 @@ import static de.esoco.lib.expression.Predicates.equalTo;
 import static de.esoco.lib.expression.Predicates.greaterOrEqual;
 import static de.esoco.lib.expression.Predicates.lessThan;
 
-import static de.esoco.storage.StoragePredicates.similarTo;
 import static de.esoco.storage.StoragePredicates.forType;
 import static de.esoco.storage.StoragePredicates.hasChild;
 import static de.esoco.storage.StoragePredicates.ifField;
 import static de.esoco.storage.StoragePredicates.like;
+import static de.esoco.storage.StoragePredicates.similarTo;
 import static de.esoco.storage.StoragePredicates.sortBy;
 
 import static org.junit.Assert.assertEquals;
@@ -117,9 +117,10 @@ public abstract class AbstractStorageTest
 	public void testAutoDatatypeMapping() throws StorageException
 	{
 		QueryResult<TestRecord> qr =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("jones"))))
-					.execute();
+			rStorage.query(
+						forType(
+							TestRecord.class,
+							ifField("name", equalTo("jones")))).execute();
 
 		assertTrue(qr.hasNext());
 
@@ -174,6 +175,7 @@ public abstract class AbstractStorageTest
 	{
 		assertTrue(rStorage.hasObjectStorage(TestRecord.class));
 
+		rStorage.removeObjectStorage(TestDetail.class);
 		rStorage.removeObjectStorage(TestRecord.class);
 		assertFalse(rStorage.hasObjectStorage(TestRecord.class));
 		rStorage.initObjectStorage(TestRecord.class);
@@ -276,23 +278,28 @@ public abstract class AbstractStorageTest
 	public void testQueryDetail() throws StorageException
 	{
 		Query<TestRecord> qByDetail =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("details",
-										   hasChild(TestDetail.class,
-													ifField("name",
-															equalTo("smith-1"))))));
+			rStorage.query(
+				forType(
+					TestRecord.class,
+					ifField(
+						"details",
+						hasChild(
+							TestDetail.class,
+							ifField("name", equalTo("smith-1"))))));
 
 		assertEquals(2, getResultSize(qByDetail.execute()));
 		qByDetail.close();
 
 		qByDetail =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("details",
-										   hasChild(TestDetail.class,
-													ifField("name",
-															greaterOrEqual("smith-2"))
-													.and(ifField("name",
-																 lessThan("smith-3")))))));
+			rStorage.query(
+				forType(
+					TestRecord.class,
+					ifField(
+						"details",
+						hasChild(
+							TestDetail.class,
+							ifField("name", greaterOrEqual("smith-2")).and(
+								ifField("name", lessThan("smith-3")))))));
 
 		assertEquals(2, getResultSize(qByDetail.execute()));
 		qByDetail.close();
@@ -333,7 +340,8 @@ public abstract class AbstractStorageTest
 	{
 		@SuppressWarnings("unchecked")
 		ClassMapping<TestRecord> rMapping =
-			(ClassMapping<TestRecord>) StorageManager.getMapping(TestRecord.class);
+			(ClassMapping<TestRecord>) StorageManager.getMapping(
+				TestRecord.class);
 
 		Query<TestRecord> q = rStorage.query(forType(TestRecord.class, null));
 
@@ -458,19 +466,19 @@ public abstract class AbstractStorageTest
 	public void testQuerySize() throws StorageException
 	{
 		Query<TestRecord> q =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("jones"))));
+			rStorage.query(
+				forType(TestRecord.class, ifField("name", equalTo("jones"))));
 
 		assertEquals(1, q.size());
 		q.close();
 
-		q = rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("smith"))));
+		q = rStorage.query(
+				forType(TestRecord.class, ifField("name", equalTo("smith"))));
 		assertEquals(2, q.size());
 		q.close();
 
-		q = rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("nothing"))));
+		q = rStorage.query(
+				forType(TestRecord.class, ifField("name", equalTo("nothing"))));
 		assertEquals(0, q.size());
 		q.close();
 	}
@@ -572,9 +580,11 @@ public abstract class AbstractStorageTest
 	void sortedQueryTest(boolean bAscending) throws StorageException
 	{
 		Query<TestRecord> qSmithSorted =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("smith")).and(sortBy("value",
-																				bAscending))));
+			rStorage.query(
+				forType(
+					TestRecord.class,
+					ifField("name", equalTo("smith")).and(
+						sortBy("value", bAscending))));
 
 		QueryResult<TestRecord> rResult = qSmithSorted.execute();
 		int					    nValue  = bAscending ? 1 : 2;
@@ -607,11 +617,12 @@ public abstract class AbstractStorageTest
 		for (int i = 1; i <= nCount; i++)
 		{
 			TestRecord aRecord =
-				new TestRecord(nIdStart + i - 1,
-							   sName,
-							   i,
-							   new Date(),
-							   new URL(TEST_URL + i));
+				new TestRecord(
+					nIdStart + i - 1,
+					sName,
+					i,
+					new Date(),
+					new URL(TEST_URL + i));
 
 			for (int j = 1; j <= 5; j++)
 			{
