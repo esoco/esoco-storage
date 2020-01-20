@@ -5,7 +5,10 @@ project.group   = 'de.esoco'
 
 sourceCompatibility = 1.8
 
-repositories { jcenter() }
+repositories {
+	mavenLocal()
+    jcenter()
+}
 
 // substitute local project dependencies if available
 configurations.all {
