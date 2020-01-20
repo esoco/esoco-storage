@@ -1,7 +1,7 @@
 # The esoco-storage project
 
-Travis build status:  
-[![Build Status](https://www.travis-ci.org/esoco/esoco-storage.svg?branch=master)](https://www.travis-ci.org/esoco/esoco-storage)
+[![](https://github.com/esoco/esoco-storage/workflows/Java%20CI/badge.svg)](https://github.com/esoco/esoco-storage/actions)
+[![Download](https://api.bintray.com/packages/esoco/sdack/esoco-storage/images/download.svg)](https://bintray.com/esoco/sdack/esoco-storage/_latestVersion)
 
 This project contains the esoco-storage framework which offers a simple but powerful API to implement object persistence. The generic API not only supports JDBC-based relational persistence engines but can also easily be adapted to other persistence concepts or back-ends. It provides direct persistence for arbitrary Java objects (POJOs) without the need for configuration other than defining the actual database connection. It is built on the ObjectRelations framework and the functional programming framework therein. Predicates from the latter are used for the definition of query criteria in a fluent way.
 

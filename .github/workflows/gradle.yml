@@ -1,0 +1,35 @@
+name: Java CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: main
+    - uses: actions/checkout@v2
+      with:
+        repository: esoco/esoco-common
+        path: esoco-common
+    - uses: actions/checkout@v2
+      with:
+        repository: esoco/esoco-monads
+        path: esoco-monads
+    - uses: actions/checkout@v2
+      with:
+        repository: esoco/objectrelations
+        path: objectrelations
+    - uses: actions/checkout@v2
+      with:
+        repository: esoco/esoco-lib
+        path: esoco-lib
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build with Gradle
+      run: main/gradlew build
