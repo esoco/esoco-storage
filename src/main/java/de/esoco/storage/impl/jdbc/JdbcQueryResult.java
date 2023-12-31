@@ -18,24 +18,21 @@ package de.esoco.storage.impl.jdbc;
 
 import de.esoco.lib.logging.Log;
 import de.esoco.lib.manage.Closeable;
-
 import de.esoco.storage.QueryList;
 import de.esoco.storage.QueryList.ElementInitializer;
 import de.esoco.storage.QueryPredicate;
 import de.esoco.storage.QueryResult;
 import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageMapping;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.obrel.core.ObjectRelations;
 import org.obrel.core.Relatable;
 import org.obrel.core.RelatedObject;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static de.esoco.storage.StorageRelationTypes.PERSISTENT;
 import static de.esoco.storage.StorageRelationTypes.QUERY_DEPTH;
@@ -47,37 +44,37 @@ import static de.esoco.storage.StorageRelationTypes.STORAGE_DEFINITION;
  */
 class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T> {
 
-	private final JdbcStorage rStorage;
+	private final JdbcStorage storage;
 
-	private final StorageMapping<T, Relatable, ?> rMapping;
+	private final StorageMapping<T, Relatable, ?> mapping;
 
-	private final ResultSet aResultSet;
+	private final ResultSet resultSet;
 
-	private final boolean bIsChildQuery;
+	private final boolean isChildQuery;
 
-	private int nOffset = 0;
+	private int offset = 0;
 
-	private boolean bOffsetRelative = false;
+	private boolean offsetRelative = false;
 
-	private boolean bHasNext = false;
+	private boolean hasNext = false;
 
 	/**
 	 * Creates a new QueryResult from a JDBC prepared statement.
 	 *
-	 * @param rStorage        The storage to perform the query on
-	 * @param rStorageMapping The storage mapping
-	 * @param rResultSet      rQueryStatement The JDBC statement to execute
-	 * @param nOffset         The initial offset to position the result at
-	 * @param bIsChildQuery   TRUE if this is a query for child objects
+	 * @param storage        The storage to perform the query on
+	 * @param storageMapping The storage mapping
+	 * @param resultSet      queryStatement The JDBC statement to execute
+	 * @param offset         The initial offset to position the result at
+	 * @param isChildQuery   TRUE if this is a query for child objects
 	 */
-	JdbcQueryResult(JdbcStorage rStorage,
-		StorageMapping<T, Relatable, ?> rStorageMapping, ResultSet rResultSet,
-		int nOffset, boolean bIsChildQuery) throws SQLException {
-		this.rStorage = rStorage;
-		this.rMapping = rStorageMapping;
-		this.aResultSet = rResultSet;
-		this.nOffset = nOffset + 1; // +1 for 1-based JDBC indexing
-		this.bIsChildQuery = bIsChildQuery;
+	JdbcQueryResult(JdbcStorage storage,
+		StorageMapping<T, Relatable, ?> storageMapping, ResultSet resultSet,
+		int offset, boolean isChildQuery) throws SQLException {
+		this.storage = storage;
+		this.mapping = storageMapping;
+		this.resultSet = resultSet;
+		this.offset = offset + 1; // +1 for 1-based JDBC indexing
+		this.isChildQuery = isChildQuery;
 	}
 
 	/**
@@ -86,7 +83,7 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T> {
 	@Override
 	public void close() {
 		try {
-			aResultSet.close();
+			resultSet.close();
 		} catch (SQLException e) {
 			Log.error("Closing ResultSet failed", e);
 		}
@@ -98,22 +95,22 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T> {
 	@Override
 	public boolean hasNext() throws StorageException {
 		try {
-			if (nOffset != 0) {
-				if (bOffsetRelative) {
-					bHasNext = aResultSet.relative(nOffset);
+			if (offset != 0) {
+				if (offsetRelative) {
+					hasNext = resultSet.relative(offset);
 				} else {
-					bHasNext = aResultSet.absolute(nOffset);
+					hasNext = resultSet.absolute(offset);
 				}
 
-				nOffset = 0;
+				offset = 0;
 			} else {
-				bHasNext = aResultSet.next();
+				hasNext = resultSet.next();
 			}
 		} catch (SQLException e) {
 			throw new StorageException(e);
 		}
 
-		return bHasNext;
+		return hasNext;
 	}
 
 	/**
@@ -121,67 +118,65 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T> {
 	 */
 	@Override
 	public T next() throws StorageException {
-		T aResult = null;
+		T result = null;
 
-		if (bHasNext) {
+		if (hasNext) {
 			try {
-				int nResultSize = aResultSet.getMetaData().getColumnCount();
+				int resultSize = resultSet.getMetaData().getColumnCount();
 
-				boolean bUseChildCounts =
-					rStorage.isChildCountsEnabled(rMapping);
+				boolean useChildCounts = storage.isChildCountsEnabled(mapping);
 
-				int nChildMappings = rMapping.getChildMappings().size();
-				int nColumns = bUseChildCounts ?
-				               nResultSize - nChildMappings :
-				               nResultSize;
+				int childMappings = mapping.getChildMappings().size();
+				int columns =
+					useChildCounts ? resultSize - childMappings : resultSize;
 
-				List<Object> aValues = new ArrayList<Object>(nColumns);
-				int[] aChildCounts = null;
+				List<Object> values = new ArrayList<Object>(columns);
+				int[] childCounts = null;
 
-				for (int i = 1; i <= nColumns; i++) {
-					Object rValue = aResultSet.getObject(i);
+				for (int i = 1; i <= columns; i++) {
+					Object value = resultSet.getObject(i);
 
-					aValues.add(rValue);
+					values.add(value);
 				}
 
-				if (bUseChildCounts) {
-					aChildCounts = new int[nChildMappings];
+				if (useChildCounts) {
+					childCounts = new int[childMappings];
 
-					for (int i = 0; i < nChildMappings; i++) {
-						aChildCounts[i] = aResultSet.getInt(++nColumns);
+					for (int i = 0; i < childMappings; i++) {
+						childCounts[i] = resultSet.getInt(++columns);
 					}
 				}
 
-				aResult = rMapping.createObject(aValues, bIsChildQuery);
+				result = mapping.createObject(values, isChildQuery);
 
-				Relatable rResultRelatable =
-					ObjectRelations.getRelatable(aResult);
+				Relatable resultRelatable =
+					ObjectRelations.getRelatable(result);
 
 				// QUERY_DEPTH will be Integer.MAX_VALUE if not set
-				int nQueryDepth = get(QUERY_DEPTH).intValue();
+				int queryDepth = get(QUERY_DEPTH).intValue();
 
 				// read children until query depth is zero, but only if
 				// parent object is not marked as persistent already
 				// which also means that is has been read completely
 				// and is returned from a cache
-				if (!rResultRelatable.hasFlag(PERSISTENT)) {
-					rResultRelatable.set(PERSISTENT);
+				if (!resultRelatable.hasFlag(PERSISTENT)) {
+					resultRelatable.set(PERSISTENT);
 
-					if (nQueryDepth > 0) {
-						readChildren(rMapping, aResult, nQueryDepth - 1,
-							aChildCounts);
+					if (queryDepth > 0) {
+						readChildren(mapping, result, queryDepth - 1,
+							childCounts);
 					}
 				}
 
-				Log.debugf("QueryResult: %s", aResult);
+				Log.debugf("QueryResult: %s", result);
 
-				return aResult;
+				return result;
 			} catch (SQLException e) {
 				throw new StorageException(e);
 			}
 		}
 
-		return aResult;
+		return result;
 	}
 
 	/**
@@ -195,66 +190,63 @@ class JdbcQueryResult<T> extends RelatedObject implements QueryResult<T> {
 	 * @see QueryResult#setPosition(int, boolean)
 	 */
 	@Override
-	public void setPosition(int nIndex, boolean bRelative) {
+	public void setPosition(int index, boolean relative) {
 		// convert absolute 0-based index to 1-based JDBC offset
-		nOffset = bRelative ? nIndex : nIndex >= 0 ? nIndex + 1 : nIndex;
+		offset = relative ? index : index >= 0 ? index + 1 : index;
 
-		bOffsetRelative = bRelative;
+		offsetRelative = relative;
 	}
 
 	/**
 	 * Reads all children of the given parent object from this result's storage
 	 * and adds them to the parent object.
 	 *
-	 * @param rParentMapping The storage mapping for the parent object
-	 * @param rParent        The parent object to read the children of
-	 * @param nDepth         The depth up to which children of the child
-	 *                          objects
-	 *                       shall be fetched
-	 * @param rChildCounts   An array containing the number of children for
-	 *                          each
-	 *                       child mapping
+	 * @param parentMapping The storage mapping for the parent object
+	 * @param parent        The parent object to read the children of
+	 * @param depth         The depth up to which children of the child objects
+	 *                      shall be fetched
+	 * @param childCounts   An array containing the number of children for each
+	 *                      child mapping
 	 * @throws StorageException If reading the children fails
 	 */
 	private <C extends StorageMapping<?, Relatable, ?>> void readChildren(
-		final StorageMapping<T, Relatable, C> rParentMapping, final T rParent,
-		int nDepth, int[] rChildCounts) throws StorageException {
-		Collection<C> rChildMappings = rParentMapping.getChildMappings();
-		int nChildMappings = rChildMappings.size();
+		final StorageMapping<T, Relatable, C> parentMapping, final T parent,
+		int depth, int[] childCounts) throws StorageException {
+		Collection<C> childMappings = parentMapping.getChildMappings();
+		int childMappingCount = childMappings.size();
 
-		if (nChildMappings > 0) {
-			int nCurrentMapping = 0;
-			Object aParentId = rParentMapping.getAttributeValue(rParent,
-				rParentMapping.getIdAttribute());
+		if (childMappingCount > 0) {
+			int currentMapping = 0;
+			Object parentId = parentMapping.getAttributeValue(parent,
+				parentMapping.getIdAttribute());
 
-			for (final C rMapping : rChildMappings) {
-				int nChildCount = (rChildCounts != null ?
-				                   rChildCounts[nCurrentMapping++] :
-				                   -1);
+			for (final C mapping : childMappings) {
+				int childCount =
+					(childCounts != null ? childCounts[currentMapping++] : -1);
 
-				if (nChildCount != 0) {
+				if (childCount != 0) {
 					@SuppressWarnings("unchecked")
-					StorageMapping<Object, Relatable, ?> rChildMapping =
-						(StorageMapping<Object, Relatable, ?>) rMapping;
+					StorageMapping<Object, Relatable, ?> childMapping =
+						(StorageMapping<Object, Relatable, ?>) mapping;
 
-					QueryPredicate<Object> pChildQuery =
-						JdbcQuery.createChildQueryPredicate(rParentMapping,
-							rChildMapping, aParentId, nDepth);
+					QueryPredicate<Object> childQuery =
+						JdbcQuery.createChildQueryPredicate(parentMapping,
+							childMapping, parentId, depth);
 
-					ElementInitializer<Object> aInitializer =
+					ElementInitializer<Object> initializer =
 						new ElementInitializer<Object>() {
 							@Override
-							public void initElements(List<Object> rChildren) {
-								rParentMapping.initChildren(rParent, rChildren,
-									rMapping);
+							public void initElements(List<Object> children) {
+								parentMapping.initChildren(parent, children,
+									mapping);
 							}
 						};
 
-					List<Object> rChildren =
-						new QueryList<Object>(rStorage.get(STORAGE_DEFINITION),
-							pChildQuery, nChildCount, aInitializer);
+					List<Object> children =
+						new QueryList<Object>(storage.get(STORAGE_DEFINITION),
+							childQuery, childCount, initializer);
 
-					rParentMapping.setChildren(rParent, rChildren, rMapping);
+					parentMapping.setChildren(parent, children, mapping);
 				}
 			}
 		}

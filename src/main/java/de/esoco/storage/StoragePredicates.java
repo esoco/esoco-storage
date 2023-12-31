@@ -64,30 +64,30 @@ public class StoragePredicates {
 	 * to the corresponding SQL wildcards by means of
 	 * {@link StorageManager#convertToSqlConstraint(String)}.
 	 *
-	 * @param sFilter The original filter value
+	 * @param filter The original filter value
 	 * @return The converted filter value
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Predicate<T> createWildcardFilter(String sFilter) {
-		if (sFilter.indexOf('*') == -1) {
-			sFilter = "%" + sFilter + "%";
+	public static <T> Predicate<T> createWildcardFilter(String filter) {
+		if (filter.indexOf('*') == -1) {
+			filter = "%" + filter + "%";
 		}
 
-		sFilter = StorageManager.convertToSqlConstraint(sFilter);
+		filter = StorageManager.convertToSqlConstraint(filter);
 
-		return (Predicate<T>) like(sFilter);
+		return (Predicate<T>) like(filter);
 	}
 
 	/**
 	 * Returns a new query predicate for a certain type of storage object.
 	 *
-	 * @param rType    The class of the storage object to query for
-	 * @param pCritera A predicate containing the query criteria
+	 * @param type    The class of the storage object to query for
+	 * @param critera A predicate containing the query criteria
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <T> QueryPredicate<T> forType(Class<T> rType,
-		Predicate<? super T> pCritera) {
-		return new QueryPredicate<T>(rType, pCritera);
+	public static <T> QueryPredicate<T> forType(Class<T> type,
+		Predicate<? super T> critera) {
+		return new QueryPredicate<T>(type, critera);
 	}
 
 	/**
@@ -97,13 +97,13 @@ public class StoragePredicates {
 	 * intended to be used for (parsed) storage queries and not for direct
 	 * evaluation.
 	 *
-	 * @param rChildType    The child type to query for
-	 * @param pChildCritera The criteria to apply to the child elements
+	 * @param childType    The child type to query for
+	 * @param childCritera The criteria to apply to the child elements
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <T> Predicate<T> hasChild(Class<T> rChildType,
-		Predicate<? super T> pChildCritera) {
-		return new QueryPredicate<T>(rChildType, pChildCritera);
+	public static <T> Predicate<T> hasChild(Class<T> childType,
+		Predicate<? super T> childCritera) {
+		return new QueryPredicate<T>(childType, childCritera);
 	}
 
 	/**
@@ -114,16 +114,16 @@ public class StoragePredicates {
 	 * predicates. If possible applications should prefer such predicates if
 	 * possible.
 	 *
-	 * @param rMapping       The storage mapping the attribute is defined in
-	 * @param rAttribute     The attribute to apply the predicate to
-	 * @param pValueCriteria The predicate to apply to attribute values
+	 * @param mapping       The storage mapping the attribute is defined in
+	 * @param attribute     The attribute to apply the predicate to
+	 * @param valueCriteria The predicate to apply to attribute values
 	 * @return A new element predicate with the given parameters
 	 */
 	public static <T, A extends Relatable> ElementPredicate<T, Object> ifAttribute(
-		StorageMapping<T, A, ?> rMapping, A rAttribute,
-		Predicate<Object> pValueCriteria) {
+		StorageMapping<T, A, ?> mapping, A attribute,
+		Predicate<Object> valueCriteria) {
 		return new ElementPredicate<T, Object>(
-			new GetAttribute<T, A>(rMapping, rAttribute), pValueCriteria);
+			new GetAttribute<T, A>(mapping, attribute), valueCriteria);
 	}
 
 	/**
@@ -134,20 +134,20 @@ public class StoragePredicates {
 	 *
 	 * @see Predicates#ifField(String, Predicate)
 	 */
-	public static <T, V> ElementPredicate<T, V> ifField(String sField,
-		Predicate<V> pValueCriteria) {
-		return Predicates.ifField(sField, pValueCriteria);
+	public static <T, V> ElementPredicate<T, V> ifField(String field,
+		Predicate<V> valueCriteria) {
+		return Predicates.ifField(field, valueCriteria);
 	}
 
 	/**
 	 * Returns a predicate that checks whether input strings match the pattern
 	 * of a certain SQL LIKE expression.
 	 *
-	 * @param sSqlPattern The SQL LIKE pattern to compare input values with
+	 * @param sqlPattern The SQL LIKE pattern to compare input values with
 	 * @return A new instance of {@link Like}
 	 */
-	public static BinaryPredicate<Object, String> like(String sSqlPattern) {
-		return new Like(sSqlPattern, false);
+	public static BinaryPredicate<Object, String> like(String sqlPattern) {
+		return new Like(sqlPattern, false);
 	}
 
 	/**
@@ -158,13 +158,13 @@ public class StoragePredicates {
 	 * appropriate semantics. It is mainly intended to be used for (parsed)
 	 * storage queries and not for direct evaluation.
 	 *
-	 * @param rReferencedType The referenced type to query for
-	 * @param pCritera        The criteria to apply to the referenced type
+	 * @param referencedType The referenced type to query for
+	 * @param critera        The criteria to apply to the referenced type
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <T> QueryPredicate<T> refersTo(Class<T> rReferencedType,
-		Predicate<? super T> pCritera) {
-		return new QueryPredicate<T>(rReferencedType, pCritera);
+	public static <T> QueryPredicate<T> refersTo(Class<T> referencedType,
+		Predicate<? super T> critera) {
+		return new QueryPredicate<T>(referencedType, critera);
 	}
 
 	/**
@@ -175,21 +175,20 @@ public class StoragePredicates {
 	 * appropriate semantics. It is intended to be used for (parsed) storage
 	 * queries and not for direct evaluation.
 	 *
-	 * @param rReferencedType The referenced type to query for
-	 * @param fReferencedAttr A function that defines the referenced attribute
-	 * @param pCritera        The criteria to apply to the referenced type
+	 * @param referencedType The referenced type to query for
+	 * @param referencedAttr A function that defines the referenced attribute
+	 * @param critera        The criteria to apply to the referenced type
 	 * @return A new instance of {@link QueryPredicate}
 	 */
-	public static <T, V> Predicate<V> refersTo(Class<T> rReferencedType,
-		Function<? super T, V> fReferencedAttr,
-		Predicate<? super T> pCritera) {
+	public static <T, V> Predicate<V> refersTo(Class<T> referencedType,
+		Function<? super T, V> referencedAttr, Predicate<? super T> critera) {
 		@SuppressWarnings("unchecked")
-		QueryPredicate<V> pRefersTo =
-			(QueryPredicate<V>) refersTo(rReferencedType, pCritera);
+		QueryPredicate<V> refersTo =
+			(QueryPredicate<V>) refersTo(referencedType, critera);
 
-		pRefersTo.set(STORAGE_FUNCTION, fReferencedAttr);
+		refersTo.set(STORAGE_FUNCTION, referencedAttr);
 
-		return pRefersTo;
+		return refersTo;
 	}
 
 	/**
@@ -199,11 +198,11 @@ public class StoragePredicates {
 	 * when
 	 * creating a new storage instance.
 	 *
-	 * @param sValue The compare value
+	 * @param value The compare value
 	 * @return A new instance of {@link Like}
 	 */
-	public static BinaryPredicate<Object, String> similarTo(String sValue) {
-		return new Like(sValue, true);
+	public static BinaryPredicate<Object, String> similarTo(String value) {
+		return new Like(value, true);
 	}
 
 	/**
@@ -212,8 +211,8 @@ public class StoragePredicates {
 	 *
 	 * @see #sortBy(String, boolean)
 	 */
-	public static <T> SortPredicate<T> sortBy(String sField) {
-		return sortBy(sField, true);
+	public static <T> SortPredicate<T> sortBy(String field) {
+		return sortBy(field, true);
 	}
 
 	/**
@@ -223,8 +222,8 @@ public class StoragePredicates {
 	 * @see #sortBy(RelationType, boolean)
 	 */
 	public static <T extends Relatable> SortPredicate<T> sortBy(
-		RelationType<?> rType) {
-		return sortBy(rType, true);
+		RelationType<?> type) {
+		return sortBy(type, true);
 	}
 
 	/**
@@ -232,14 +231,14 @@ public class StoragePredicates {
 	 * The returned predicate only has a declarative purpose and will therefore
 	 * always evaluate to TRUE.
 	 *
-	 * @param sField     The name of the field to sort by
-	 * @param bAscending TRUE for ascending sort order, FALSE for descending
+	 * @param field     The name of the field to sort by
+	 * @param ascending TRUE for ascending sort order, FALSE for descending
 	 * @return A new sort predicate
 	 */
-	public static <T> SortPredicate<T> sortBy(String sField,
-		boolean bAscending) {
-		return sortBy(sField,
-			bAscending ? SortDirection.ASCENDING : SortDirection.DESCENDING);
+	public static <T> SortPredicate<T> sortBy(String field,
+		boolean ascending) {
+		return sortBy(field,
+			ascending ? SortDirection.ASCENDING : SortDirection.DESCENDING);
 	}
 
 	/**
@@ -247,13 +246,13 @@ public class StoragePredicates {
 	 * The returned predicate only has a declarative purpose and will therefore
 	 * always evaluate to TRUE.
 	 *
-	 * @param sField     The name of the field to sort by
-	 * @param eDirection The sort direction
+	 * @param field     The name of the field to sort by
+	 * @param direction The sort direction
 	 * @return A new sort predicate
 	 */
-	public static <T> SortPredicate<T> sortBy(String sField,
-		SortDirection eDirection) {
-		return new SortPredicate<>(sField, eDirection);
+	public static <T> SortPredicate<T> sortBy(String field,
+		SortDirection direction) {
+		return new SortPredicate<>(field, direction);
 	}
 
 	/**
@@ -261,14 +260,14 @@ public class StoragePredicates {
 	 * that is defined by a relation type. The returned predicate only has a
 	 * declarative purpose and will therefore always evaluate to TRUE.
 	 *
-	 * @param rType      The type of the property to sort by
-	 * @param bAscending TRUE for ascending sort order, FALSE for descending
+	 * @param type      The type of the property to sort by
+	 * @param ascending TRUE for ascending sort order, FALSE for descending
 	 * @return A new sort predicate
 	 */
 	public static <T extends Relatable> SortPredicate<T> sortBy(
-		RelationType<?> rType, boolean bAscending) {
-		return sortBy(rType,
-			bAscending ? SortDirection.ASCENDING : SortDirection.DESCENDING);
+		RelationType<?> type, boolean ascending) {
+		return sortBy(type,
+			ascending ? SortDirection.ASCENDING : SortDirection.DESCENDING);
 	}
 
 	/**
@@ -276,13 +275,13 @@ public class StoragePredicates {
 	 * that is defined by a relation type. The returned predicate only has a
 	 * declarative purpose and will therefore always evaluate to TRUE.
 	 *
-	 * @param rType      The type of the property to sort by
-	 * @param eDirection The sort direction
+	 * @param type      The type of the property to sort by
+	 * @param direction The sort direction
 	 * @return A new sort predicate
 	 */
 	public static <T extends Relatable> SortPredicate<T> sortBy(
-		RelationType<?> rType, SortDirection eDirection) {
-		return new SortPredicate<>(rType, eDirection);
+		RelationType<?> type, SortDirection direction) {
+		return new SortPredicate<>(type, direction);
 	}
 
 	/**
@@ -300,26 +299,26 @@ public class StoragePredicates {
 	public static class GetAttribute<I, A extends Relatable>
 		extends GetElement<I, A, Object> {
 
-		private final StorageMapping<I, A, ?> rStorageMapping;
+		private final StorageMapping<I, A, ?> storageMapping;
 
 		/**
 		 * Creates a new instance that accesses a particular field.
 		 *
-		 * @param rMapping   The storage mapping
-		 * @param rAttribute The name of the field to access
+		 * @param mapping   The storage mapping
+		 * @param attribute The name of the field to access
 		 */
-		public GetAttribute(StorageMapping<I, A, ?> rMapping, A rAttribute) {
-			super(rAttribute, "GetAttribute");
-			rStorageMapping = rMapping;
+		public GetAttribute(StorageMapping<I, A, ?> mapping, A attribute) {
+			super(attribute, "GetAttribute");
+			storageMapping = mapping;
 		}
 
 		/**
 		 * @see GetElement#getElementValue(Object, Object)
 		 */
 		@Override
-		protected Object getElementValue(I rObject, A rAttribute) {
+		protected Object getElementValue(I object, A attribute) {
 			try {
-				return rStorageMapping.getAttributeValue(rObject, rAttribute);
+				return storageMapping.getAttributeValue(object, attribute);
 			} catch (StorageException e) {
 				throw new IllegalArgumentException(e);
 			}
@@ -343,73 +342,72 @@ public class StoragePredicates {
 	public static class Like extends Comparison<Object, String>
 		implements SqlExpressionFormat {
 
-		private boolean bFuzzySearch;
+		private boolean fuzzySearch;
 
 		/**
 		 * Creates a new instance for a certain pattern.
 		 *
-		 * @param sSqlPattern  The SQL LIKE pattern to compare input values
-		 *                     with
-		 * @param bFuzzySearch TRUE for a fuzzy search that also finds similar
-		 *                     terms
+		 * @param sqlPattern  The SQL LIKE pattern to compare input values with
+		 * @param fuzzySearch TRUE for a fuzzy search that also finds similar
+		 *                    terms
 		 */
-		public Like(String sSqlPattern, boolean bFuzzySearch) {
-			super(sSqlPattern, "LIKE");
+		public Like(String sqlPattern, boolean fuzzySearch) {
+			super(sqlPattern, "LIKE");
 
-			this.bFuzzySearch = bFuzzySearch;
+			this.fuzzySearch = fuzzySearch;
 		}
 
 		/**
 		 * Converts a SQL LIKE pattern into a regular expression by replacing
 		 * all occurrences of "%" with ".*" and of "_" with ".".
 		 *
-		 * @param sSqlPattern The SQL LIKE pattern to convert
+		 * @param sqlPattern The SQL LIKE pattern to convert
 		 * @return The resulting regular expression
 		 */
-		public static String convertLikeToRegEx(String sSqlPattern) {
-			sSqlPattern = sSqlPattern.replaceAll("%", ".*");
-			sSqlPattern = sSqlPattern.replaceAll("_", ".");
+		public static String convertLikeToRegEx(String sqlPattern) {
+			sqlPattern = sqlPattern.replaceAll("%", ".*");
+			sqlPattern = sqlPattern.replaceAll("_", ".");
 
-			return sSqlPattern;
+			return sqlPattern;
 		}
 
 		/**
 		 * Converts the SQL pattern of this instance into a regular expression
 		 * and matches the target value against it.
 		 *
-		 * @param rValue   sText The text string to evaluate
-		 * @param sPattern The LIKE pattern to compare with
+		 * @param value   text The text string to evaluate
+		 * @param pattern The LIKE pattern to compare with
 		 * @return TRUE if the text string matches the pattern
 		 */
 		@Override
 		@SuppressWarnings("boxing")
-		public Boolean evaluate(Object rValue, String sPattern) {
-			return Pattern.matches(convertLikeToRegEx(sPattern),
-				rValue.toString());
+		public Boolean evaluate(Object value, String pattern) {
+			return Pattern.matches(convertLikeToRegEx(pattern),
+				value.toString());
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
 		@Override
-		public String format(JdbcStorage rStorage, Predicate<?> pExpression,
-			String sColumn, String sValue, boolean bNegate) {
-			StringBuilder aResult = new StringBuilder();
-			String sFuzzySearchFunction = rStorage.getFuzzySearchFunction();
+		public String format(JdbcStorage storage, Predicate<?> expression,
+			String column, String value, boolean negate) {
+			StringBuilder result = new StringBuilder();
+			String fuzzySearchFunction = storage.getFuzzySearchFunction();
 
-			if (bFuzzySearch && sFuzzySearchFunction != null) {
-				aResult.append(sFuzzySearchFunction);
-				aResult.append('(').append(sColumn).append(')').append(' ');
-				aResult.append(bNegate ? "<>" : "=");
-				aResult.append(' ').append(sFuzzySearchFunction);
-				aResult.append('(').append(sValue).append(')');
+			if (fuzzySearch && fuzzySearchFunction != null) {
+				result.append(fuzzySearchFunction);
+				result.append('(').append(column).append(')').append(' ');
+				result.append(negate ? "<>" : "=");
+				result.append(' ').append(fuzzySearchFunction);
+				result.append('(').append(value).append(')');
 			} else {
-				aResult.append(sColumn).append(' ');
-				aResult.append(bNegate ? "NOT LIKE" : "LIKE");
-				aResult.append(' ').append(sValue);
+				result.append(column).append(' ');
+				result.append(negate ? "NOT LIKE" : "LIKE");
+				result.append(' ').append(value);
 			}
 
-			return aResult.toString();
+			return result.toString();
 		}
 	}
 
@@ -424,28 +422,27 @@ public class StoragePredicates {
 		/**
 		 * Creates a new instance for a certain field in the target class.
 		 *
-		 * @param sField     The name of the field
-		 * @param eDirection The sort direction
+		 * @param field     The name of the field
+		 * @param direction The sort direction
 		 */
-		public SortPredicate(String sField, SortDirection eDirection) {
-			this(new ReadField<T, Object>(sField), eDirection);
+		public SortPredicate(String field, SortDirection direction) {
+			this(new ReadField<T, Object>(field), direction);
 		}
 
 		/**
 		 * Creates a new instance.
 		 *
-		 * @param fSortElement The function to access the element that defines
-		 *                     the sort order
-		 * @param eDirection   The sort direction
+		 * @param sortElement The function to access the element that defines
+		 *                    the sort order
+		 * @param direction   The sort direction
 		 */
 		@SuppressWarnings({ "unchecked", "boxing" })
-		public SortPredicate(
-			ElementAccessFunction<?, ? super T, ?> fSortElement,
-			SortDirection eDirection) {
-			super((ElementAccessFunction<?, ? super T, Object>) fSortElement,
+		public SortPredicate(ElementAccessFunction<?, ? super T, ?> sortElement,
+			SortDirection direction) {
+			super((ElementAccessFunction<?, ? super T, Object>) sortElement,
 				Predicates.alwaysTrue());
 
-			set(SORT_DIRECTION, eDirection);
+			set(SORT_DIRECTION, direction);
 		}
 	}
 }

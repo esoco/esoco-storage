@@ -85,15 +85,15 @@ public interface StorageMapping<T, A extends Relatable,
 	 * Checks whether a certain attribute value is valid for the attribute
 	 * datatype and performs the necessary conversions if possible.
 	 *
-	 * @param rAttribute The attribute descriptor
-	 * @param rValue     The attribute value to be checked (may be NULL)
+	 * @param attribute The attribute descriptor
+	 * @param value     The attribute value to be checked (may be NULL)
 	 * @return The attribute value, converted if necessary
 	 * @throws IllegalArgumentException If the given value is invalid for the
 	 *                                  attribute
 	 * @throws StorageException         If accessing storage data for a
 	 *                                  conversion fails
 	 */
-	public Object checkAttributeValue(A rAttribute, Object rValue)
+	public Object checkAttributeValue(A attribute, Object value)
 		throws StorageException;
 
 	/**
@@ -105,36 +105,36 @@ public interface StorageMapping<T, A extends Relatable,
 	 * {@link #getAttributes()}.
 	 * The list may be empty but must never be NULL.
 	 *
-	 * @param rAttributeValues A list containing the attribute values
-	 * @param bAsChild         TRUE if the object is read as a child of another
-	 *                         object by the storage
+	 * @param attributeValues A list containing the attribute values
+	 * @param asChild         TRUE if the object is read as a child of another
+	 *                        object by the storage
 	 * @return A new instance of the type described by this mapping,
 	 * initialized
 	 * with the given attribute values
 	 * @throws StorageException If creating the object fails
 	 */
-	public T createObject(List<?> rAttributeValues, boolean bAsChild)
+	public T createObject(List<?> attributeValues, boolean asChild)
 		throws StorageException;
 
 	/**
 	 * Returns the datatype of a certain attribute.
 	 *
-	 * @param rAttribute The attribute descriptor
+	 * @param attribute The attribute descriptor
 	 * @return The attribute datatype
 	 */
-	public Class<?> getAttributeDatatype(A rAttribute);
+	public Class<?> getAttributeDatatype(A attribute);
 
 	/**
 	 * Returns the value of a certain attribute from the given object.
 	 *
-	 * @param rObject    The object to query the value from
-	 * @param rAttribute The descriptor of the attribute to return the value of
+	 * @param object    The object to query the value from
+	 * @param attribute The descriptor of the attribute to return the value of
 	 * @return The attribute value (may be NULL)
 	 * @throws StorageException Implementations may throw an storage exception
 	 *                          if a storage operation is required to access an
 	 *                          attribute value and fails
 	 */
-	public Object getAttributeValue(T rObject, A rAttribute)
+	public Object getAttributeValue(T object, A attribute)
 		throws StorageException;
 
 	/**
@@ -157,13 +157,13 @@ public interface StorageMapping<T, A extends Relatable,
 	 * are
 	 * described by a certain mapping.
 	 *
-	 * @param rObject       The object to return the children of
-	 * @param rChildMapping The mapping that describes the type of the children
+	 * @param object       The object to return the children of
+	 * @param childMapping The mapping that describes the type of the children
 	 * @return A collection containing the child elements (may be empty but
 	 * will
 	 * never be null)
 	 */
-	public Collection<?> getChildren(T rObject, C rChildMapping);
+	public Collection<?> getChildren(T object, C childMapping);
 
 	/**
 	 * Returns a predicate with default criteria for the mapped type or a
@@ -174,10 +174,10 @@ public interface StorageMapping<T, A extends Relatable,
 	 *
 	 * <p>The default implementation always returns NULL which is ignored.</p>
 	 *
-	 * @param rType The (sub-type) that is actually queried
+	 * @param type The (sub-type) that is actually queried
 	 * @return The default criteria for the given type or NULL for none
 	 */
-	default public Predicate<T> getDefaultCriteria(Class<? extends T> rType) {
+	default public Predicate<T> getDefaultCriteria(Class<? extends T> type) {
 		return null;
 	}
 
@@ -199,19 +199,19 @@ public interface StorageMapping<T, A extends Relatable,
 	 * Returns the parent attribute that is associated with a certain parent
 	 * mapping.
 	 *
-	 * @param rParentMapping The parent mapping to return the attribute for
+	 * @param parentMapping The parent mapping to return the attribute for
 	 * @return The matching parent attribute or NULL if none could be found
 	 */
-	public A getParentAttribute(StorageMapping<?, ?, ?> rParentMapping);
+	public A getParentAttribute(StorageMapping<?, ?, ?> parentMapping);
 
 	/**
 	 * Initializes the parent-child relation of a list of child elements.
 	 *
-	 * @param rObject       The parent object to initialize the children of
-	 * @param rChildren     The list of child elements
-	 * @param rChildMapping The mapping that describes the child type
+	 * @param object       The parent object to initialize the children of
+	 * @param children     The list of child elements
+	 * @param childMapping The mapping that describes the child type
 	 */
-	public void initChildren(T rObject, List<?> rChildren, C rChildMapping);
+	public void initChildren(T object, List<?> children, C childMapping);
 
 	/**
 	 * Checks whether the mapped type is allowed to be deleted from a storage.
@@ -224,10 +224,10 @@ public interface StorageMapping<T, A extends Relatable,
 	 * Returns TRUE if the given attribute defines a part of an objects
 	 * hierarchy.
 	 *
-	 * @param rAttribute The attribute to check
+	 * @param attribute The attribute to check
 	 * @return TRUE for a hierarchy attribute
 	 */
-	public boolean isHierarchyAttribute(A rAttribute);
+	public boolean isHierarchyAttribute(A attribute);
 
 	/**
 	 * This method performs a mapping of attribute values which cannot be
@@ -245,23 +245,23 @@ public interface StorageMapping<T, A extends Relatable,
 	 * result depends on the value of another attribute or the attribute type.
 	 * </p>
 	 *
-	 * @param rAttribute The descriptor of the attribute to map
-	 * @param rValue     The value to be mapped (may be NULL)
+	 * @param attribute The descriptor of the attribute to map
+	 * @param value     The value to be mapped (may be NULL)
 	 * @return The mapped value
 	 * @throws StorageException Implementations may throw an storage exception
 	 *                          if they cannot map a value or need to perform
 	 *                          other storage operations for the mapping
 	 */
-	public Object mapValue(A rAttribute, Object rValue) throws StorageException;
+	public Object mapValue(A attribute, Object value) throws StorageException;
 
 	/**
 	 * Sets the value of a certain attribute on the given object.
 	 *
-	 * @param rObject    The object to set the value on
-	 * @param rAttribute The descriptor of the attribute to be set
-	 * @param rValue     The attribute value
+	 * @param object    The object to set the value on
+	 * @param attribute The descriptor of the attribute to be set
+	 * @param value     The attribute value
 	 */
-	public void setAttributeValue(T rObject, A rAttribute, Object rValue);
+	public void setAttributeValue(T object, A attribute, Object value);
 
 	/**
 	 * Sets the children of a parent to a list of child elements. The given
@@ -269,21 +269,21 @@ public interface StorageMapping<T, A extends Relatable,
 	 * MUST be used directly by the implementation because it may be a special
 	 * object that implements storage access or similar.
 	 *
-	 * @param rObject       The parent object to set the children of
-	 * @param rChildren     The list of child elements
-	 * @param rChildMapping The mapping that describes the child type
+	 * @param object       The parent object to set the children of
+	 * @param children     The list of child elements
+	 * @param childMapping The mapping that describes the child type
 	 */
-	public void setChildren(T rObject, List<?> rChildren, C rChildMapping);
+	public void setChildren(T object, List<?> children, C childMapping);
 
 	/**
 	 * May be invoked by a storage implementation to store a modified object of
 	 * this mapping that is referenced by another object before that object is
 	 * stored.
 	 *
-	 * @param rSourceObject     The object from which the reference originates
-	 * @param rReferencedObject The referenced object to store
+	 * @param sourceObject     The object from which the reference originates
+	 * @param referencedObject The referenced object to store
 	 * @throws StorageException If storing the reference fails
 	 */
-	public void storeReference(Relatable rSourceObject, T rReferencedObject)
+	public void storeReference(Relatable sourceObject, T referencedObject)
 		throws StorageException;
 }

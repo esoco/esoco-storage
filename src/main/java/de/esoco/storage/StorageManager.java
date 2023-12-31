@@ -18,20 +18,18 @@ package de.esoco.storage;
 
 import de.esoco.lib.logging.Log;
 import de.esoco.lib.logging.LogRecord;
-
 import de.esoco.storage.mapping.ClassMapping;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.obrel.core.ObjectRelations;
 import org.obrel.core.Relatable;
 import org.obrel.core.RelatedObject;
 import org.obrel.core.RelationType;
 import org.obrel.type.MetaTypes;
 import org.obrel.type.StandardTypes;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import static de.esoco.storage.StorageRelationTypes.PERSISTENT;
 import static de.esoco.storage.StorageRelationTypes.QUERY_DEPTH;
@@ -87,20 +85,20 @@ public class StorageManager {
 
 	private static final boolean DEBUG_OUTPUT = false;
 
-	private static Map<Class<?>, MappingFactory<?>> aMappingFactoryRegistry =
+	private static final Map<Class<?>, MappingFactory<?>> mappingFactoryRegistry =
 		new LinkedHashMap<Class<?>, MappingFactory<?>>();
 
-	private static Map<Object, StorageDefinition> aStorageDefinitionRegistry =
+	private static final Map<Object, StorageDefinition> storageDefinitionRegistry =
 		new HashMap<Object, StorageDefinition>();
 
-	private static ThreadLocal<Map<StorageDefinition, Storage>> aThreadStorages;
+	private static ThreadLocal<Map<StorageDefinition, Storage>> threadStorages;
 
-	private static RelatedObject aStorageMetaData = new RelatedObject();
+	private static final RelatedObject storageMetaData = new RelatedObject();
 
 	static {
 		StorageRelationTypes.init();
 
-		aThreadStorages = new ThreadLocal<Map<StorageDefinition, Storage>>() {
+		threadStorages = new ThreadLocal<Map<StorageDefinition, Storage>>() {
 			@Override
 			protected Map<StorageDefinition, Storage> initialValue() {
 				return new HashMap<StorageDefinition, Storage>();
@@ -117,33 +115,33 @@ public class StorageManager {
 	/**
 	 * Returns the storage definition for a certain key if it exists.
 	 *
-	 * @param rKey The key to check the definition for
+	 * @param key The key to check the definition for
 	 * @return The storage definition for the given key
 	 * @throws StorageException If storage definition exists for the given key
 	 */
-	static StorageDefinition checkStorageDefinition(Object rKey)
+	static StorageDefinition checkStorageDefinition(Object key)
 		throws StorageException {
-		StorageDefinition rDefinition = getStorageDefinition(rKey);
+		StorageDefinition definition = getStorageDefinition(key);
 
-		if (rDefinition == null) {
-			throw new StorageException("No storage definition for key " + rKey);
+		if (definition == null) {
+			throw new StorageException("No storage definition for key " + key);
 		}
 
-		return rDefinition;
+		return definition;
 	}
 
 	/**
 	 * Converts a string constraint to the corresponding SQL constraint (for a
 	 * SQL LIKE statement) by replacing '*' with '%' and '_' with '?'.
 	 *
-	 * @param sConstraint The original constraint string
+	 * @param constraint The original constraint string
 	 * @return The converted string
 	 */
-	public static String convertToSqlConstraint(String sConstraint) {
-		sConstraint = sConstraint.replaceAll("\\*", "%");
-		sConstraint = sConstraint.replaceAll("\\?", "_");
+	public static String convertToSqlConstraint(String constraint) {
+		constraint = constraint.replaceAll("\\*", "%");
+		constraint = constraint.replaceAll("\\?", "_");
 
-		return sConstraint;
+		return constraint;
 	}
 
 	/**
@@ -156,45 +154,45 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rDefinition The storage definition
+	 * @param definition The storage definition
 	 * @return A new storage instance
 	 * @throws StorageException If creating the storage fails
 	 */
-	static Storage createStorage(StorageDefinition rDefinition)
+	static Storage createStorage(StorageDefinition definition)
 		throws StorageException {
-		Storage aStorage = rDefinition.createStorage();
+		Storage storage = definition.createStorage();
 
-		ObjectRelations.copyRelations(aStorageMetaData, aStorage, false);
-		aStorage.set(STORAGE_DEFINITION, rDefinition);
+		ObjectRelations.copyRelations(storageMetaData, storage, false);
+		storage.set(STORAGE_DEFINITION, definition);
 
-		if (rDefinition.hasRelation(QUERY_DEPTH)) {
-			aStorage.set(QUERY_DEPTH, rDefinition.get(QUERY_DEPTH));
+		if (definition.hasRelation(QUERY_DEPTH)) {
+			storage.set(QUERY_DEPTH, definition.get(QUERY_DEPTH));
 		}
 
-		return aStorage;
+		return storage;
 	}
 
 	/**
 	 * Debug helper method to log stack locations of storage access.
 	 *
-	 * @param sInfo    The info string to log
-	 * @param rStorage nUsageCount
+	 * @param info    The info string to log
+	 * @param storage usageCount
 	 */
 	@SuppressWarnings({ "boxing" })
-	private static void debugOutStorageAccess(String sInfo, Storage rStorage) {
-		StackTraceElement[] rStackTrace =
+	private static void debugOutStorageAccess(String info, Storage storage) {
+		StackTraceElement[] stackTrace =
 			Thread.currentThread().getStackTrace();
 
-		int nStackOverhead =
+		int stackOverhead =
 			LogRecord.getStackOverhead(StorageManager.class.getPackage(),
-				rStackTrace);
+				stackTrace);
 
-		StackTraceElement rLocation = rStackTrace[nStackOverhead];
+		StackTraceElement location = stackTrace[stackOverhead];
 
-		Log.infof("%s STORAGE %s[Usage %d] from %s.%s[%d]\n", sInfo,
-			rStorage.get(StandardTypes.OBJECT_ID), rStorage.nUsageCount,
-			rLocation.getClassName(), rLocation.getMethodName(),
-			rLocation.getLineNumber());
+		Log.infof("%s STORAGE %s[Usage %d] from %s.%s[%d]\n", info,
+			storage.get(StandardTypes.OBJECT_ID), storage.usageCount,
+			location.getClassName(), location.getMethodName(),
+			location.getLineNumber());
 	}
 
 	/**
@@ -202,46 +200,46 @@ public class StorageManager {
 	 * been registered for the type a new instance of {@link ClassMapping} will
 	 * be returned.
 	 *
-	 * @param rType The class to return the mapping for mapping
+	 * @param type The class to return the mapping for mapping
 	 * @return The storage mapping for the given type
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> StorageMapping<T, ?, ?> getMapping(Class<T> rType) {
-		StorageMapping<T, ?, ?> rMapping =
+	public static <T> StorageMapping<T, ?, ?> getMapping(Class<T> type) {
+		StorageMapping<T, ?, ?> mapping =
 			(StorageMapping<T, ?, ?>) ObjectRelations
-				.getRelatable(rType)
+				.getRelatable(type)
 				.get(STORAGE_MAPPING);
 
-		if (rMapping == null) {
-			for (Entry<Class<?>, MappingFactory<?>> rEntry :
-				aMappingFactoryRegistry.entrySet()) {
-				if (rEntry.getKey().isAssignableFrom(rType)) {
-					rMapping =
-						((MappingFactory<T>) rEntry.getValue()).createMapping(
-							rType);
+		if (mapping == null) {
+			for (Entry<Class<?>, MappingFactory<?>> entry :
+				mappingFactoryRegistry.entrySet()) {
+				if (entry.getKey().isAssignableFrom(type)) {
+					mapping =
+						((MappingFactory<T>) entry.getValue()).createMapping(
+							type);
 
 					break;
 				}
 			}
 
-			if (rMapping == null) {
-				rMapping = new ClassMapping<T>(rType);
+			if (mapping == null) {
+				mapping = new ClassMapping<T>(type);
 			}
 		}
 
-		return rMapping;
+		return mapping;
 	}
 
 	/**
 	 * Returns the storage mapping factory for a certain base class.
 	 *
-	 * @param rBaseClass The base class to register the factory for
+	 * @param baseClass The base class to register the factory for
 	 * @return The mapping factory or NULL if none has been registered yet
 	 * @see #registerMappingFactory(Class, MappingFactory)
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> MappingFactory<T> getMappingFactory(Class<T> rBaseClass) {
-		return (MappingFactory<T>) aMappingFactoryRegistry.get(rBaseClass);
+	public static <T> MappingFactory<T> getMappingFactory(Class<T> baseClass) {
+		return (MappingFactory<T>) mappingFactoryRegistry.get(baseClass);
 	}
 
 	/**
@@ -261,32 +259,32 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rKey The key to return a storage instance for
+	 * @param key The key to return a storage instance for
 	 * @return A storage instance from the storage definition associated with
 	 * the given key
 	 * @throws StorageException If neither a specific nor a default storage
 	 *                          definition is available for the given key or if
 	 *                          creating the storage fails
 	 */
-	public static Storage getStorage(Object rKey) throws StorageException {
-		Map<StorageDefinition, Storage> rStorageMap = aThreadStorages.get();
+	public static Storage getStorage(Object key) throws StorageException {
+		Map<StorageDefinition, Storage> storageMap = threadStorages.get();
 
-		StorageDefinition rDefinition = checkStorageDefinition(rKey);
-		Storage rStorage = rStorageMap.get(rDefinition);
+		StorageDefinition definition = checkStorageDefinition(key);
+		Storage storage = storageMap.get(definition);
 
-		if (rStorage == null || !rStorage.isValid()) {
-			rStorage = createStorage(rDefinition);
-			rStorageMap.put(rDefinition, rStorage);
-			rStorage.set(MetaTypes.MANAGED);
+		if (storage == null || !storage.isValid()) {
+			storage = createStorage(definition);
+			storageMap.put(definition, storage);
+			storage.set(MetaTypes.MANAGED);
 		} else {
-			rStorage.nUsageCount++;
+			storage.usageCount++;
 		}
 
 		if (DEBUG_OUTPUT) {
-			debugOutStorageAccess("GET", rStorage);
+			debugOutStorageAccess("GET", storage);
 		}
 
-		return rStorage;
+		return storage;
 	}
 
 	/**
@@ -301,22 +299,22 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rKey The storage key
+	 * @param key The storage key
 	 * @return Either the matching storage definition, the default definition,
 	 * or NULL if none of these has been set
 	 */
-	public static StorageDefinition getStorageDefinition(Object rKey) {
-		StorageDefinition rDefinition;
+	public static StorageDefinition getStorageDefinition(Object key) {
+		StorageDefinition definition;
 
-		if (rKey instanceof StorageDefinition) {
-			rDefinition = (StorageDefinition) rKey;
-		} else if (aStorageDefinitionRegistry.containsKey(rKey)) {
-			rDefinition = aStorageDefinitionRegistry.get(rKey);
+		if (key instanceof StorageDefinition) {
+			definition = (StorageDefinition) key;
+		} else if (storageDefinitionRegistry.containsKey(key)) {
+			definition = storageDefinitionRegistry.get(key);
 		} else {
-			rDefinition = aStorageDefinitionRegistry.get(DEFAULT_STORAGE);
+			definition = storageDefinitionRegistry.get(DEFAULT_STORAGE);
 		}
 
-		return rDefinition;
+		return definition;
 	}
 
 	/**
@@ -325,14 +323,14 @@ public class StorageManager {
 	 * storage
 	 * previously.
 	 *
-	 * @param rObject The object to check for persistence
+	 * @param object The object to check for persistence
 	 * @return TRUE if the object is already persistent in a storage
 	 */
-	public static boolean isPersistent(Object rObject) {
-		Relatable rObjectRelatable = ObjectRelations.getRelatable(rObject);
+	public static boolean isPersistent(Object object) {
+		Relatable objectRelatable = ObjectRelations.getRelatable(object);
 
-		return rObjectRelatable.hasFlag(PERSISTENT) ||
-			rObjectRelatable.hasFlag(STORING);
+		return objectRelatable.hasFlag(PERSISTENT) ||
+			objectRelatable.hasFlag(STORING);
 	}
 
 	/**
@@ -355,24 +353,24 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rKey The key to return a storage instance for
+	 * @param key The key to return a storage instance for
 	 * @return A new storage instance from the storage definition associated
 	 * with the given key
 	 * @throws StorageException If neither a specific nor a default storage
 	 *                          definition is available
 	 */
 	@SuppressWarnings("boxing")
-	public static Storage newStorage(Object rKey) throws StorageException {
-		StorageDefinition rDefinition = checkStorageDefinition(rKey);
-		Storage aStorage = createStorage(rDefinition);
+	public static Storage newStorage(Object key) throws StorageException {
+		StorageDefinition definition = checkStorageDefinition(key);
+		Storage storage = createStorage(definition);
 
-		aStorage.set(MetaTypes.MANAGED, false);
+		storage.set(MetaTypes.MANAGED, false);
 
 		if (DEBUG_OUTPUT) {
-			debugOutStorageAccess("NEW", aStorage);
+			debugOutStorageAccess("NEW", storage);
 		}
 
-		return aStorage;
+		return storage;
 	}
 
 	/**
@@ -380,12 +378,12 @@ public class StorageManager {
 	 * factory will then be used to create storage mappings for the given class
 	 * and all it's subclasses.
 	 *
-	 * @param rBaseClass The base class to register the factory for
-	 * @param rFactory   The factor to register
+	 * @param baseClass The base class to register the factory for
+	 * @param factory   The factor to register
 	 */
-	public static <T> void registerMappingFactory(Class<T> rBaseClass,
-		MappingFactory<T> rFactory) {
-		aMappingFactoryRegistry.put(rBaseClass, rFactory);
+	public static <T> void registerMappingFactory(Class<T> baseClass,
+		MappingFactory<T> factory) {
+		mappingFactoryRegistry.put(baseClass, factory);
 	}
 
 	/**
@@ -402,22 +400,22 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rDefinition The storage definition instance to register
-	 * @param rKeys       The keys to associate the definition with (must
-	 *                       not be
-	 *                    empty)
-	 * @throws IllegalArgumentException If either argument is NULL or if rKeys
-	 *                                  is empty
+	 * @param definition The storage definition instance to register
+	 * @param keys       The keys to associate the definition with (must not be
+	 *                   empty)
+	 * @throws IllegalArgumentException If either argument is NULL or if
+	 * keys is
+	 *                                  empty
 	 */
-	public static void registerStorage(StorageDefinition rDefinition,
-		Object... rKeys) {
-		if (rDefinition == null || rKeys == null || rKeys.length == 0) {
+	public static void registerStorage(StorageDefinition definition,
+		Object... keys) {
+		if (definition == null || keys == null || keys.length == 0) {
 			throw new IllegalArgumentException(
 				"Arguments must not be NULL or empty");
 		}
 
-		for (Object rKey : rKeys) {
-			aStorageDefinitionRegistry.put(rKey, rDefinition);
+		for (Object key : keys) {
+			storageDefinitionRegistry.put(key, definition);
 		}
 	}
 
@@ -426,22 +424,22 @@ public class StorageManager {
 	 * storage manager. Will be invoked internally by
 	 * {@link Storage#release()}.
 	 *
-	 * @param rStorage The storage to release
+	 * @param storage The storage to release
 	 */
-	static void releaseStorage(Storage rStorage) {
+	static void releaseStorage(Storage storage) {
 		if (DEBUG_OUTPUT) {
-			debugOutStorageAccess("RELEASE", rStorage);
+			debugOutStorageAccess("RELEASE", storage);
 		}
 
-		if (--rStorage.nUsageCount == 0) {
-			if (rStorage.hasFlag(MetaTypes.MANAGED)) {
-				aThreadStorages.get().remove(rStorage.get(STORAGE_DEFINITION));
+		if (--storage.usageCount == 0) {
+			if (storage.hasFlag(MetaTypes.MANAGED)) {
+				threadStorages.get().remove(storage.get(STORAGE_DEFINITION));
 			}
 
-			rStorage.close();
+			storage.close();
 
 			if (DEBUG_OUTPUT) {
-				debugOutStorageAccess("CLOSE", rStorage);
+				debugOutStorageAccess("CLOSE", storage);
 			}
 		}
 	}
@@ -456,21 +454,20 @@ public class StorageManager {
 	 * <p>See the class documentation for more information about the storage
 	 * management.</p>
 	 *
-	 * @param rDefinition The new default storage definition
+	 * @param definition The new default storage definition
 	 */
-	public static void setDefaultStorage(StorageDefinition rDefinition) {
-		registerStorage(rDefinition, DEFAULT_STORAGE);
+	public static void setDefaultStorage(StorageDefinition definition) {
+		registerStorage(definition, DEFAULT_STORAGE);
 	}
 
 	/**
 	 * Sets the storage meta data.
 	 *
-	 * @param rType  The new storage meta data
-	 * @param rValue The new storage meta data
+	 * @param type  The new storage meta data
+	 * @param value The new storage meta data
 	 */
-	public static <T> void setStorageMetaData(RelationType<T> rType,
-		T rValue) {
-		aStorageMetaData.set(rType, rValue);
+	public static <T> void setStorageMetaData(RelationType<T> type, T value) {
+		storageMetaData.set(type, value);
 	}
 
 	/**
@@ -478,14 +475,14 @@ public class StorageManager {
 	 * resources.
 	 */
 	public static void shutdown() {
-		Map<StorageDefinition, Storage> rStorageMap = aThreadStorages.get();
+		Map<StorageDefinition, Storage> storageMap = threadStorages.get();
 
-		if (rStorageMap != null) {
+		if (storageMap != null) {
 			// release storage of main application thread
-			rStorageMap.values().forEach(Storage::release);
+			storageMap.values().forEach(Storage::release);
 		}
 
-		aThreadStorages = null;
+		threadStorages = null;
 	}
 
 	/**
@@ -493,15 +490,15 @@ public class StorageManager {
 	 *
 	 * @author eso
 	 */
-	public static interface MappingFactory<T> {
+	public interface MappingFactory<T> {
 
 		/**
 		 * Must be implemented to create a new storage mapping for a certain
 		 * type of storage object.
 		 *
-		 * @param rType The class of the storage object
+		 * @param type The class of the storage object
 		 * @return A new storage mapping for the given type
 		 */
-		public StorageMapping<T, ?, ?> createMapping(Class<T> rType);
+		StorageMapping<T, ?, ?> createMapping(Class<T> type);
 	}
 }

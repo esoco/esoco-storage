@@ -23,69 +23,33 @@ package de.esoco.storage;
  */
 public class TestDetail {
 
+	private final String name;
+
+	private final int value;
+
 	TestRecord parent;
 
-	private int id = -1;
-
-	private String name;
-
-	private int value;
-
-	/**
-	 * Default constructor.
-	 */
-	public TestDetail() {
+	public TestDetail(String name, int value) {
+		this.name = name;
+		this.value = value;
 	}
 
-	/**
-	 * Creates a new instance.
-	 */
-	public TestDetail(String sName, int nValue) {
-		this.name = sName;
-		this.value = nValue;
-	}
-
-	/**
-	 * Returns the id.
-	 *
-	 * @return The id
-	 */
 	public final int getId() {
-		return id;
+		return -1;
 	}
 
-	/**
-	 * Returns the name.
-	 *
-	 * @return The name
-	 */
 	public final String getName() {
 		return name;
 	}
 
-	/**
-	 * Returns the parent.
-	 *
-	 * @return The parent
-	 */
 	public final TestRecord getParent() {
 		return parent;
 	}
 
-	/**
-	 * Returns the value.
-	 *
-	 * @return The value
-	 */
 	public final int getValue() {
 		return value;
 	}
 
-	/**
-	 * toString method
-	 *
-	 * @return a string
-	 */
 	@Override
 	public String toString() {
 		return "TestDetail[" + name + ", " + value + "]";

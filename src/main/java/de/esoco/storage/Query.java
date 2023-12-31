@@ -46,12 +46,11 @@ public interface Query<T> extends Closeable, Relatable {
 	 * Returns a set containing the distinct values of a certain object
 	 * attribute.
 	 *
-	 * @param rAttribute The attribute to get the distinct values of
+	 * @param attribute The attribute to get the distinct values of
 	 * @return A set containing the distinct attribute values
 	 * @throws StorageException If querying the values fails
 	 */
-	public Set<Object> getDistinct(Relatable rAttribute)
-		throws StorageException;
+	public Set<Object> getDistinct(Relatable attribute) throws StorageException;
 
 	/**
 	 * Returns the query predicate that this query is based on.
@@ -76,14 +75,14 @@ public interface Query<T> extends Closeable, Relatable {
 	 * implementations or underlying storages in which case -1 will be
 	 * returned.</p>
 	 *
-	 * @param rId The ID of the object to determine the position of
+	 * @param id The ID of the object to determine the position of
 	 * @return The zero-based index of the given ID in the query or -1 if
 	 * the ID
 	 * could not be found in the query result or if this operation is not
 	 * supported by the implementation
 	 * @throws StorageException If querying the position fails
 	 */
-	public int positionOf(Object rId) throws StorageException;
+	public int positionOf(Object id) throws StorageException;
 
 	/**
 	 * Returns the size of this query, i.e. the number of objects that an

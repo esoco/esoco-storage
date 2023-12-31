@@ -23,7 +23,6 @@ import de.esoco.storage.StorageException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
 import java.util.Properties;
 
 /**
@@ -36,26 +35,26 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String sConnectURL;
+	private final String connectURL;
 
-	private final Properties aConnectionProperties = new Properties();
+	private final Properties connectionProperties = new Properties();
 
 	/**
 	 * Creates a new instance with a certain JDBC connection URL and connection
 	 * properties.
 	 *
-	 * @param sConnectURL The URL for the JDBC connection
-	 * @param rProperties The connection properties
+	 * @param connectURL The URL for the JDBC connection
+	 * @param properties The connection properties
 	 */
-	JdbcDriverStorageDefinition(String sConnectURL, Properties rProperties) {
-		if (sConnectURL == null) {
+	JdbcDriverStorageDefinition(String connectURL, Properties properties) {
+		if (connectURL == null) {
 			throw new IllegalArgumentException("URL");
 		}
 
-		this.sConnectURL = sConnectURL;
+		this.connectURL = connectURL;
 
-		if (rProperties != null) {
-			aConnectionProperties.putAll(rProperties);
+		if (properties != null) {
+			connectionProperties.putAll(properties);
 		}
 	}
 
@@ -66,20 +65,20 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 	 * @see StorageDefinition#equals(Object)
 	 */
 	@Override
-	public boolean equals(Object rObject) {
-		if (this == rObject) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (rObject == null || getClass() != rObject.getClass()) {
+		if (object == null || getClass() != object.getClass()) {
 			return false;
 		}
 
-		JdbcDriverStorageDefinition rOther =
-			(JdbcDriverStorageDefinition) rObject;
+		JdbcDriverStorageDefinition other =
+			(JdbcDriverStorageDefinition) object;
 
-		return sConnectURL.equals(rOther.sConnectURL) &&
-			aConnectionProperties.equals(rOther.aConnectionProperties);
+		return connectURL.equals(other.connectURL) &&
+			connectionProperties.equals(other.connectionProperties);
 	}
 
 	/**
@@ -87,7 +86,7 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 	 */
 	@Override
 	public int hashCode() {
-		return sConnectURL.hashCode() * 37 + aConnectionProperties.hashCode();
+		return connectURL.hashCode() * 37 + connectionProperties.hashCode();
 	}
 
 	/**
@@ -95,7 +94,7 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 	 */
 	@Override
 	public String toString() {
-		return "JdbcDriverStorageDefinition [sConnectURL=" + sConnectURL + "]";
+		return "JdbcDriverStorageDefinition [connectURL=" + connectURL + "]";
 	}
 
 	/**
@@ -106,12 +105,11 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 	@Override
 	protected Storage createStorage() throws StorageException {
 		try {
-			Connection aConnection =
-				DriverManager.getConnection(sConnectURL,
-					aConnectionProperties);
+			Connection connection =
+				DriverManager.getConnection(connectURL, connectionProperties);
 
-			return new JdbcStorage(aConnection,
-				getDatabaseParameters(aConnection));
+			return new JdbcStorage(connection,
+				getDatabaseParameters(connection));
 		} catch (SQLException e) {
 			throw new StorageException("Storage creation failed", e);
 		}

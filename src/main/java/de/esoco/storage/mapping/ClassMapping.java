@@ -17,17 +17,17 @@
 package de.esoco.storage.mapping;
 
 import de.esoco.lib.logging.Log;
-
 import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageManager;
 import de.esoco.storage.StorageMapping;
 import de.esoco.storage.StorageRelationTypes;
+import org.obrel.core.ObjectRelations;
+import org.obrel.core.Relatable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,12 +35,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.obrel.core.ObjectRelations;
-import org.obrel.core.Relatable;
-
 import static de.esoco.storage.StorageRelationTypes.STORAGE_MAPPING;
 import static de.esoco.storage.StorageRelationTypes.STORAGE_NAME;
-
 import static org.obrel.type.MetaTypes.OBJECT_ID_ATTRIBUTE;
 import static org.obrel.type.MetaTypes.PARENT_ATTRIBUTE;
 
@@ -78,16 +74,16 @@ public class ClassMapping<T>
 	private static final int IGNORED_MODIFIERS =
 		Modifier.TRANSIENT | Modifier.STATIC | Modifier.VOLATILE;
 
-	private final Class<T> rMappedType;
+	private final Class<T> mappedType;
 
-	private FieldDescriptor rIdAttribute;
+	private FieldDescriptor idAttribute;
 
-	private FieldDescriptor rParentAttribute;
+	private FieldDescriptor parentAttribute;
 
-	private List<FieldDescriptor> aFieldDescriptors =
+	private List<FieldDescriptor> fieldDescriptors =
 		new ArrayList<FieldDescriptor>();
 
-	private Map<ClassMapping<?>, FieldDescriptor> aChildFields =
+	private Map<ClassMapping<?>, FieldDescriptor> childFields =
 		new LinkedHashMap<ClassMapping<?>, FieldDescriptor>();
 
 	/**
@@ -102,43 +98,43 @@ public class ClassMapping<T>
 	 * constructor exists an {@link IllegalStateException} will be thrown when
 	 * the method is invoked.</p>
 	 *
-	 * @param rClass The type to create the mapping for
+	 * @param mappedType The type class to create the mapping for
 	 * @throws IllegalArgumentException If an element of the given class cannot
 	 *                                  be mapped
 	 */
-	public ClassMapping(Class<T> rClass) {
-		rMappedType = rClass;
+	public ClassMapping(Class<T> mappedType) {
+		this.mappedType = mappedType;
 
 		// store this mapping before initializing to prevent recursion when
 		// child mappings access the mapping of their parent
-		ObjectRelations.getRelatable(rClass).set(STORAGE_MAPPING, this);
+		ObjectRelations.getRelatable(mappedType).set(STORAGE_MAPPING, this);
 
 		analyzeFields();
-		set(STORAGE_NAME, rMappedType.getSimpleName());
+		set(STORAGE_NAME, mappedType.getSimpleName());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public T createObject(List<?> rAttributeValues, boolean bAsChild) {
+	public T createObject(List<?> attributeValues, boolean asChild) {
 		try {
-			T aObject = rMappedType.newInstance();
-			int nValueIndex = 0;
+			T object = mappedType.newInstance();
+			int valueIndex = 0;
 
-			for (FieldDescriptor rField : aFieldDescriptors) {
-				Object rValue = rAttributeValues.get(nValueIndex++);
+			for (FieldDescriptor field : fieldDescriptors) {
+				Object value = attributeValues.get(valueIndex++);
 
-				if (!rField.hasFlag(PARENT_ATTRIBUTE)) {
-					rValue = checkAttributeValue(rField, rValue);
-					rField.setFieldValue(aObject, rValue);
+				if (!field.hasFlag(PARENT_ATTRIBUTE)) {
+					value = checkAttributeValue(field, value);
+					field.setFieldValue(object, value);
 				}
 			}
 
-			return aObject;
+			return object;
 		} catch (Exception e) {
 			throw new IllegalStateException(
-				"Could not create instance of " + rMappedType, e);
+				"Could not create instance of " + mappedType, e);
 		}
 	}
 
@@ -146,30 +142,29 @@ public class ClassMapping<T>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Class<?> getAttributeDatatype(FieldDescriptor rField) {
-		return rField.getField().getType();
+	public Class<?> getAttributeDatatype(FieldDescriptor field) {
+		return field.getField().getType();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Object getAttributeValue(T rObject, FieldDescriptor rField)
+	public Object getAttributeValue(T object, FieldDescriptor field)
 		throws StorageException {
-		Object rValue = rField.getFieldValue(rObject);
+		Object value = field.getFieldValue(object);
 
 		// for references to other objects replace the object with it's ID
-		if (rValue != null && rField.hasRelation(STORAGE_MAPPING)) {
+		if (value != null && field.hasRelation(STORAGE_MAPPING)) {
 			@SuppressWarnings("unchecked")
-			StorageMapping<Object, Relatable, ?> rMapping =
-				(StorageMapping<Object, Relatable, ?>) rField.get(
+			StorageMapping<Object, Relatable, ?> mapping =
+				(StorageMapping<Object, Relatable, ?>) field.get(
 					STORAGE_MAPPING);
 
-			rValue =
-				rMapping.getAttributeValue(rValue, rMapping.getIdAttribute());
+			value = mapping.getAttributeValue(value, mapping.getIdAttribute());
 		}
 
-		return rValue;
+		return value;
 	}
 
 	/**
@@ -177,7 +172,7 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public Collection<FieldDescriptor> getAttributes() {
-		return aFieldDescriptors;
+		return fieldDescriptors;
 	}
 
 	/**
@@ -185,30 +180,29 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public Collection<ClassMapping<?>> getChildMappings() {
-		return aChildFields.keySet();
+		return childFields.keySet();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Collection<?> getChildren(T rObject,
-		ClassMapping<?> rChildMapping) {
-		return (Collection<?>) aChildFields
-			.get(rChildMapping)
-			.getFieldValue(rObject);
+	public Collection<?> getChildren(T object, ClassMapping<?> childMapping) {
+		return (Collection<?>) childFields
+			.get(childMapping)
+			.getFieldValue(object);
 	}
 
 	/**
 	 * Returns the descriptor for a certain field.
 	 *
-	 * @param sFieldName The name of the field
+	 * @param fieldName The name of the field
 	 * @return The field descriptor or NULL if no such field exists
 	 */
-	public FieldDescriptor getFieldDescriptor(String sFieldName) {
-		for (FieldDescriptor rFieldDescriptor : aFieldDescriptors) {
-			if (rFieldDescriptor.getField().getName().equals(sFieldName)) {
-				return rFieldDescriptor;
+	public FieldDescriptor getFieldDescriptor(String fieldName) {
+		for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
+			if (fieldDescriptor.getField().getName().equals(fieldName)) {
+				return fieldDescriptor;
 			}
 		}
 
@@ -220,7 +214,7 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public FieldDescriptor getIdAttribute() {
-		return rIdAttribute;
+		return idAttribute;
 	}
 
 	/**
@@ -228,7 +222,7 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public Class<T> getMappedType() {
-		return rMappedType;
+		return mappedType;
 	}
 
 	/**
@@ -236,25 +230,25 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public FieldDescriptor getParentAttribute(
-		StorageMapping<?, ?, ?> rParentMapping) {
-		FieldDescriptor rResult = null;
+		StorageMapping<?, ?, ?> parentMapping) {
+		FieldDescriptor result = null;
 
-		if (rParentAttribute != null &&
-			rParentAttribute.get(STORAGE_MAPPING) == rParentMapping) {
-			rResult = rParentAttribute;
+		if (parentAttribute != null &&
+			parentAttribute.get(STORAGE_MAPPING) == parentMapping) {
+			result = parentAttribute;
 		}
 
-		return rResult;
+		return result;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void initChildren(T rParent, List<?> rChildren,
-		ClassMapping<?> rChildMapping) {
-		for (Object rChild : rChildren) {
-			rChildMapping.rParentAttribute.setFieldValue(rChild, rParent);
+	public void initChildren(T parent, List<?> children,
+		ClassMapping<?> childMapping) {
+		for (Object child : children) {
+			childMapping.parentAttribute.setFieldValue(child, parent);
 		}
 	}
 
@@ -271,26 +265,26 @@ public class ClassMapping<T>
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean isHierarchyAttribute(FieldDescriptor rAttribute) {
-		return rAttribute.hasFlag(PARENT_ATTRIBUTE);
+	public boolean isHierarchyAttribute(FieldDescriptor attribute) {
+		return attribute.hasFlag(PARENT_ATTRIBUTE);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setAttributeValue(T rObject, FieldDescriptor rField,
-		Object rValue) {
-		rField.setFieldValue(rObject, rValue);
+	public void setAttributeValue(T object, FieldDescriptor field,
+		Object value) {
+		field.setFieldValue(object, value);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void setChildren(T rParent, List<?> rChildren,
-		ClassMapping<?> rChildMapping) {
-		aChildFields.get(rChildMapping).setFieldValue(rParent, rChildren);
+	public void setChildren(T parent, List<?> children,
+		ClassMapping<?> childMapping) {
+		childFields.get(childMapping).setFieldValue(parent, children);
 	}
 
 	/**
@@ -298,7 +292,7 @@ public class ClassMapping<T>
 	 */
 	@Override
 	public String toString() {
-		return String.format("ClassMapping[%s]", rMappedType.getSimpleName());
+		return String.format("ClassMapping[%s]", mappedType.getSimpleName());
 	}
 
 	/**
@@ -309,70 +303,70 @@ public class ClassMapping<T>
 	 * @throws IllegalArgumentException If a field cannot be mapped
 	 */
 	private void analyzeFields() {
-		for (Field rField : rMappedType.getDeclaredFields()) {
-			int nModifiers = rField.getModifiers();
+		for (Field field : mappedType.getDeclaredFields()) {
+			int modifiers = field.getModifiers();
 
-			if ((nModifiers & IGNORED_MODIFIERS) == 0) {
-				FieldDescriptor aFieldDescriptor = new FieldDescriptor(rField);
+			if ((modifiers & IGNORED_MODIFIERS) == 0) {
+				FieldDescriptor fieldDescriptor = new FieldDescriptor(field);
 
-				if (aFieldDescriptor.hasFlag(OBJECT_ID_ATTRIBUTE)) {
-					rIdAttribute = aFieldDescriptor;
-				} else if (aFieldDescriptor.hasFlag(PARENT_ATTRIBUTE)) {
-					rParentAttribute = aFieldDescriptor;
+				if (fieldDescriptor.hasFlag(OBJECT_ID_ATTRIBUTE)) {
+					idAttribute = fieldDescriptor;
+				} else if (fieldDescriptor.hasFlag(PARENT_ATTRIBUTE)) {
+					parentAttribute = fieldDescriptor;
 				}
 
-				if (Collection.class.isAssignableFrom(rField.getType())) {
-					ClassMapping<?> rChildMapping = createChildMapping(rField);
+				if (Collection.class.isAssignableFrom(field.getType())) {
+					ClassMapping<?> childMapping = createChildMapping(field);
 
-					aChildFields.put(rChildMapping, aFieldDescriptor);
+					childFields.put(childMapping, fieldDescriptor);
 					Log.debug(
-						String.format("Child Mapping: %s,%s", rChildMapping,
-							aFieldDescriptor));
+						String.format("Child Mapping: %s,%s", childMapping,
+							fieldDescriptor));
 				} else {
-					aFieldDescriptors.add(aFieldDescriptor);
+					fieldDescriptors.add(fieldDescriptor);
 					Log.debug(
-						String.format("Field Mapping: %s", aFieldDescriptor));
+						String.format("Field Mapping: %s", fieldDescriptor));
 				}
 			}
 		}
 
-		aFieldDescriptors = Collections.unmodifiableList(aFieldDescriptors);
-		aChildFields = Collections.unmodifiableMap(aChildFields);
+		fieldDescriptors = Collections.unmodifiableList(fieldDescriptors);
+		childFields = Collections.unmodifiableMap(childFields);
 	}
 
 	/**
 	 * Creates and returns the mapping for the elements of a given
 	 * collection-type field.
 	 *
-	 * @param rField The field to create the mapping for
+	 * @param field The field to create the mapping for
 	 * @return The mapping instance for the given field
 	 * @throws IllegalArgumentException If the field cannot be mapped to a
 	 * child
 	 *                                  collection
 	 */
-	private ClassMapping<?> createChildMapping(Field rField) {
-		assert Collection.class.isAssignableFrom(rField.getType());
+	private ClassMapping<?> createChildMapping(Field field) {
+		assert Collection.class.isAssignableFrom(field.getType());
 
-		Type rGenericType = rField.getGenericType();
-		Class<?> rElementType = null;
+		Type genericType = field.getGenericType();
+		Class<?> elementType = null;
 
-		if (rGenericType instanceof ParameterizedType) {
-			Type[] rTypes =
-				((ParameterizedType) rGenericType).getActualTypeArguments();
+		if (genericType instanceof ParameterizedType) {
+			Type[] types =
+				((ParameterizedType) genericType).getActualTypeArguments();
 
-			if (rTypes.length == 1 && rTypes[0] instanceof Class<?>) {
-				rElementType = (Class<?>) rTypes[0];
+			if (types.length == 1 && types[0] instanceof Class<?>) {
+				elementType = (Class<?>) types[0];
 			}
 		}
 
-		if (rElementType == null) {
+		if (elementType == null) {
 			throw new IllegalArgumentException(
-				"Could not determine element type of " + rField.getName());
+				"Could not determine element type of " + field.getName());
 		}
 
-		ClassMapping<?> rChildMapping =
-			(ClassMapping<?>) StorageManager.getMapping(rElementType);
+		ClassMapping<?> childMapping =
+			(ClassMapping<?>) StorageManager.getMapping(elementType);
 
-		return rChildMapping;
+		return childMapping;
 	}
 }

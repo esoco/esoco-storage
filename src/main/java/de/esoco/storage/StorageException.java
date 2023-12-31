@@ -35,21 +35,21 @@ public class StorageException extends RuntimeException {
 	/**
 	 * @see Exception#Exception(String)
 	 */
-	public StorageException(String sMessage) {
-		super(sMessage);
+	public StorageException(String message) {
+		super(message);
 	}
 
 	/**
 	 * @see Exception#Exception(Throwable)
 	 */
-	public StorageException(Throwable eCause) {
-		super(eCause);
+	public StorageException(Throwable cause) {
+		super(cause);
 	}
 
 	/**
 	 * @see Exception#Exception(String, Throwable)
 	 */
-	public StorageException(String sMessage, Throwable eCause) {
-		super(sMessage, eCause);
+	public StorageException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

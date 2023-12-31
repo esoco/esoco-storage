@@ -29,17 +29,17 @@ import java.util.List;
  */
 public class QueryList<T> extends AbstractList<T> {
 
-	private final StorageDefinition rStorageDefinition;
+	private final StorageDefinition storageDefinition;
 
-	private final QueryPredicate<T> pQuery;
+	private final QueryPredicate<T> queryPredicate;
 
-	private int nSize = -1;
+	private int size = -1;
 
-	private ElementInitializer<T> rInitializer = null;
+	private ElementInitializer<T> initializer = null;
 
-	private ArrayList<T> aElements = null;
+	private ArrayList<T> elements = null;
 
-	private boolean bQueried = false;
+	private boolean queried = false;
 
 	/**
 	 * Creates a new instance. This no-argument constructor exists for
@@ -47,48 +47,48 @@ public class QueryList<T> extends AbstractList<T> {
 	 * empty list without a query that can be modified freely.
 	 */
 	public QueryList() {
-		rStorageDefinition = null;
-		pQuery = null;
-		aElements = new ArrayList<T>();
-		bQueried = true;
+		storageDefinition = null;
+		queryPredicate = null;
+		elements = new ArrayList<T>();
+		queried = true;
 	}
 
 	/**
 	 * Creates a new instance.
 	 *
-	 * @param rDefinition  The definition of the storage to query the list
-	 *                     elements from
-	 * @param pChildQuery  The query to read the list elements from
-	 * @param nSize        The size of the list after querying or -1 if unknown
-	 * @param rInitializer The initializer for the queried list elements
+	 * @param definition  The definition of the storage to query the list
+	 *                    elements from
+	 * @param childQuery  The query to read the list elements from
+	 * @param size        The size of the list after querying or -1 if unknown
+	 * @param initializer The initializer for the queried list elements
 	 */
-	public QueryList(StorageDefinition rDefinition,
-		QueryPredicate<T> pChildQuery, int nSize,
-		ElementInitializer<T> rInitializer) {
-		this.rStorageDefinition = rDefinition;
-		this.pQuery = pChildQuery;
-		this.nSize = nSize;
-		this.rInitializer = rInitializer;
+	public QueryList(StorageDefinition definition,
+		QueryPredicate<T> childQuery,
+		int size, ElementInitializer<T> initializer) {
+		this.storageDefinition = definition;
+		this.queryPredicate = childQuery;
+		this.size = size;
+		this.initializer = initializer;
 	}
 
 	/**
 	 * @see AbstractList#add(int, Object)
 	 */
 	@Override
-	public void add(int nIndex, T rElement) {
+	public void add(int index, T element) {
 		query();
 
-		aElements.add(nIndex, rElement);
+		elements.add(index, element);
 	}
 
 	/**
 	 * @see AbstractList#get(int)
 	 */
 	@Override
-	public T get(int nIndex) {
+	public T get(int index) {
 		query();
 
-		return aElements.get(nIndex);
+		return elements.get(index);
 	}
 
 	/**
@@ -96,8 +96,8 @@ public class QueryList<T> extends AbstractList<T> {
 	 *
 	 * @return The query
 	 */
-	public final QueryPredicate<T> getQuery() {
-		return pQuery;
+	public final QueryPredicate<T> getQueryPredicate() {
+		return queryPredicate;
 	}
 
 	/**
@@ -106,7 +106,7 @@ public class QueryList<T> extends AbstractList<T> {
 	 * @return TRUE if this list has been queried already
 	 */
 	public final boolean isQueried() {
-		return bQueried;
+		return queried;
 	}
 
 	/**
@@ -117,37 +117,37 @@ public class QueryList<T> extends AbstractList<T> {
 	 * @throws StorageRuntimeException If performing the query fails
 	 */
 	public synchronized void query() throws StorageRuntimeException {
-		if (!bQueried) {
-			Storage rStorage = null;
+		if (!queried) {
+			Storage storage = null;
 
 			try {
-				rStorage = StorageManager.getStorage(rStorageDefinition);
+				storage = StorageManager.getStorage(storageDefinition);
 
-				Query<T> rQuery = rStorage.query(pQuery);
+				Query<T> query = storage.query(queryPredicate);
 
 				try {
-					QueryResult<T> aResult = rQuery.execute();
-					ArrayList<T> aResultObjects = new ArrayList<T>();
+					QueryResult<T> result = query.execute();
+					ArrayList<T> resultObjects = new ArrayList<T>();
 
-					while (aResult.hasNext()) {
-						aResultObjects.add(aResult.next());
+					while (result.hasNext()) {
+						resultObjects.add(result.next());
 					}
 
-					if (rInitializer != null) {
-						rInitializer.initElements(aResultObjects);
+					if (initializer != null) {
+						initializer.initElements(resultObjects);
 					}
 
-					aElements = aResultObjects;
-					nSize = aElements.size();
-					bQueried = true;
+					elements = resultObjects;
+					size = elements.size();
+					queried = true;
 				} finally {
-					rQuery.close();
+					query.close();
 				}
 			} catch (StorageException e) {
 				throw new StorageRuntimeException(e);
 			} finally {
-				if (rStorage != null) {
-					rStorage.release();
+				if (storage != null) {
+					storage.release();
 				}
 			}
 		}
@@ -157,20 +157,20 @@ public class QueryList<T> extends AbstractList<T> {
 	 * @see AbstractList#remove(int)
 	 */
 	@Override
-	public T remove(int nIndex) {
+	public T remove(int index) {
 		query();
 
-		return aElements.remove(nIndex);
+		return elements.remove(index);
 	}
 
 	/**
 	 * @see AbstractList#set(int, Object)
 	 */
 	@Override
-	public T set(int nIndex, T rElement) {
+	public T set(int index, T element) {
 		query();
 
-		return aElements.set(nIndex, rElement);
+		return elements.set(index, element);
 	}
 
 	/**
@@ -178,11 +178,11 @@ public class QueryList<T> extends AbstractList<T> {
 	 */
 	@Override
 	public int size() {
-		if (nSize < 0) {
+		if (size < 0) {
 			query();
 		}
 
-		return aElements != null ? aElements.size() : nSize;
+		return elements != null ? elements.size() : size;
 	}
 
 	/**
@@ -192,14 +192,14 @@ public class QueryList<T> extends AbstractList<T> {
 	 *
 	 * @author eso
 	 */
-	public static interface ElementInitializer<T> {
+	public interface ElementInitializer<T> {
 
 		/**
 		 * Will be invoked immediately after the list elements have been
 		 * queried.
 		 *
-		 * @param rElements The list element
+		 * @param elements The list element
 		 */
-		public void initElements(List<T> rElements);
+		void initElements(List<T> elements);
 	}
 }

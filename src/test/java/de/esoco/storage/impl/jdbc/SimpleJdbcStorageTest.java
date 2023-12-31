@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class SimpleJdbcStorageTest {
 
-	private Storage rStorage;
+	private Storage storage;
 
 	/**
 	 * Initializes the storage for the tests.
@@ -57,9 +57,9 @@ class SimpleJdbcStorageTest {
 		StorageManager.registerStorage(JdbcStorageDefinition.create(
 			"jdbc:h2:mem:testdb;user=sa;password="), TestRecord.class);
 
-		rStorage = StorageManager.getStorage(TestRecord.class);
+		storage = StorageManager.getStorage(TestRecord.class);
 
-		rStorage.initObjectStorage(TestRecord.class);
+		storage.initObjectStorage(TestRecord.class);
 	}
 
 	/**
@@ -69,8 +69,8 @@ class SimpleJdbcStorageTest {
 	 */
 	@AfterEach
 	void tearDown() throws StorageException, SQLException {
-		rStorage.rollback();
-		rStorage.release();
+		storage.rollback();
+		storage.release();
 	}
 
 	/**
@@ -78,27 +78,27 @@ class SimpleJdbcStorageTest {
 	 */
 	@Test
 	void testStore() throws Exception {
-		TestRecord aTestRecord = new TestRecord(1, "Test1", 1, new Date(),
+		TestRecord testRecord = new TestRecord(1, "Test1", 1, new Date(),
 			new URL("http://example.com"));
-		Query<TestRecord> aQuery = rStorage.query(
+		Query<TestRecord> query = storage.query(
 			forType(TestRecord.class, ifField("name", equalTo("Test1"))));
 
-		rStorage.store(aTestRecord);
+		storage.store(testRecord);
 
-		QueryResult<TestRecord> aResult = aQuery.execute();
+		QueryResult<TestRecord> result = query.execute();
 
-		assertTrue(aResult.hasNext());
+		assertTrue(result.hasNext());
 
-		aTestRecord = aResult.next();
-		aTestRecord.addDetail(new TestDetail("TD 1.1", 11));
-		aTestRecord.addDetail(new TestDetail("TD 1.2", 12));
-		rStorage.store(aTestRecord);
+		testRecord = result.next();
+		testRecord.addDetail(new TestDetail("TD 1.1", 11));
+		testRecord.addDetail(new TestDetail("TD 1.2", 12));
+		storage.store(testRecord);
 
-		aResult = aQuery.execute();
+		result = query.execute();
 
-		assertTrue(aResult.hasNext());
+		assertTrue(result.hasNext());
 
-		aTestRecord = aResult.next();
-		assertEquals(2, aTestRecord.getDetails().size());
+		testRecord = result.next();
+		assertEquals(2, testRecord.getDetails().size());
 	}
 }

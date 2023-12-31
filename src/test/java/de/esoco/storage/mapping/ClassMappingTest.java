@@ -33,10 +33,10 @@ public class ClassMappingTest {
 	 */
 	@Test
 	public void testConstructor() throws Exception {
-		ClassMapping<TestRecord> aMapping =
+		ClassMapping<TestRecord> mapping =
 			new ClassMapping<>(TestRecord.class);
 
-		assertEquals(5, aMapping.getAttributes().size());
-		assertEquals(1, aMapping.getChildMappings().size());
+		assertEquals(5, mapping.getAttributes().size());
+		assertEquals(1, mapping.getChildMappings().size());
 	}
 }

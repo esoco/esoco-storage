@@ -80,42 +80,41 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 * @see StorageMapping#checkAttributeValue(Relatable, Object)
 	 */
 	@Override
-	public Object checkAttributeValue(A rAttribute, Object rValue)
+	public Object checkAttributeValue(A attribute, Object value)
 		throws StorageException {
-		if (rValue != null) {
-			Class<?> rDatatype = getAttributeDatatype(rAttribute);
+		if (value != null) {
+			Class<?> datatype = getAttributeDatatype(attribute);
 
-			if (rDatatype != String.class) {
-				if (rDatatype.isPrimitive()) {
-					rDatatype = ReflectUtil.getWrapperType(rDatatype);
+			if (datatype != String.class) {
+				if (datatype.isPrimitive()) {
+					datatype = ReflectUtil.getWrapperType(datatype);
 				}
 
-				if (rValue instanceof String) {
-					rValue = parseStringValue(rAttribute, rDatatype,
-						(String) rValue);
-				} else if (rDatatype == Long.class &&
-					rValue instanceof Number) {
-					rValue = ((Number) rValue).longValue();
-				} else if (rDatatype == BigInteger.class &&
-					rValue instanceof BigDecimal) {
+				if (value instanceof String) {
+					value =
+						parseStringValue(attribute, datatype, (String) value);
+				} else if (datatype == Long.class && value instanceof Number) {
+					value = ((Number) value).longValue();
+				} else if (datatype == BigInteger.class &&
+					value instanceof BigDecimal) {
 					// large integer attributes may be stored as decimal values
 					// without a fraction (e.g. SQL NUMERIC type)
-					rValue = ((BigDecimal) rValue).toBigIntegerExact();
+					value = ((BigDecimal) value).toBigIntegerExact();
 				}
 			}
 
-			Class<?> rValueType = rValue.getClass();
+			Class<?> valueType = value.getClass();
 
-			if (!rDatatype.isAssignableFrom(rValueType)) {
-				String sMessage =
+			if (!datatype.isAssignableFrom(valueType)) {
+				String message =
 					String.format("Attribute type mismatch: %s (expected: %s)",
-						rValueType, rDatatype);
+						valueType, datatype);
 
-				throw new IllegalArgumentException(sMessage);
+				throw new IllegalArgumentException(message);
 			}
 		}
 
-		return rValue;
+		return value;
 	}
 
 	/**
@@ -126,13 +125,12 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 * @see StorageMapping#mapValue(Relatable, Object)
 	 */
 	@Override
-	public Object mapValue(A rAttribute, Object rValue)
-		throws StorageException {
-		if (rValue instanceof Collection || rValue instanceof Map) {
-			rValue = Conversions.asString(rValue);
+	public Object mapValue(A attribute, Object value) throws StorageException {
+		if (value instanceof Collection || value instanceof Map) {
+			value = Conversions.asString(value);
 		}
 
-		return rValue;
+		return value;
 	}
 
 	/**
@@ -142,24 +140,24 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 * @see StorageMapping#storeReference(Relatable, Object)
 	 */
 	@Override
-	public void storeReference(Relatable rSourceObject, T rReferencedObject)
+	public void storeReference(Relatable sourceObject, T referencedObject)
 		throws StorageException {
 		TransactionManager.begin();
 
 		try {
 			// TODO: determine the correct storage if not registered for class
-			Storage rStorage =
-				StorageManager.getStorage(rReferencedObject.getClass());
+			Storage storage =
+				StorageManager.getStorage(referencedObject.getClass());
 
-			TransactionManager.addTransactionElement(rStorage);
+			TransactionManager.addTransactionElement(storage);
 
-			rStorage.store(rReferencedObject);
+			storage.store(referencedObject);
 			TransactionManager.commit();
 		} catch (Exception e) {
 			try {
 				TransactionManager.rollback();
-			} catch (Exception eRollback) {
-				Log.error("Transaction rollback failed", eRollback);
+			} catch (Exception rollback) {
+				Log.error("Transaction rollback failed", rollback);
 			}
 
 			if (e instanceof StorageException) {
@@ -173,54 +171,53 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	/**
 	 * Parses a value into the corresponding datatype (if possible).
 	 *
-	 * @param rAttribute The attribute to parse the string for
-	 * @param rDatatype  The attribute datatype
-	 * @param sValue     The value to parse
+	 * @param attribute The attribute to parse the string for
+	 * @param datatype  The attribute datatype
+	 * @param value     The value to parse
 	 * @return The parsed value or the original input string if parsing was not
 	 * successful
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Object parseStringValue(A rAttribute, Class<?> rDatatype,
-		String sValue) {
-		Object rResult;
+	private Object parseStringValue(A attribute, Class<?> datatype,
+		String value) {
+		Object result;
 
-		if (rDatatype == Class.class) {
+		if (datatype == Class.class) {
 			try {
-				rResult = Class.forName(sValue);
+				result = Class.forName(value);
 			} catch (ClassNotFoundException e) {
 				throw new IllegalStateException(e);
 			}
-		} else if (RelationType.class.isAssignableFrom(rDatatype)) {
-			rResult = RelationType.valueOf(sValue);
+		} else if (RelationType.class.isAssignableFrom(datatype)) {
+			result = RelationType.valueOf(value);
 
-			if (rResult == null) {
+			if (result == null) {
 				throw new IllegalStateException(
-					"Undefined RelationType " + sValue);
+					"Undefined RelationType " + value);
 			}
-		} else if (rDatatype.isEnum()) {
-			if (HasOrder.class.isAssignableFrom(rDatatype)) {
-				sValue = sValue.substring(sValue.indexOf('-') + 1);
+		} else if (datatype.isEnum()) {
+			if (HasOrder.class.isAssignableFrom(datatype)) {
+				value = value.substring(value.indexOf('-') + 1);
 			}
 
-			rResult =
-				Enum.valueOf((Class<Enum>) rDatatype, sValue.toUpperCase());
-		} else if (rDatatype == Period.class) {
-			rResult = Period.valueOf(sValue);
-		} else if (Collection.class.isAssignableFrom(rDatatype)) {
-			rResult =
-				parseCollection(sValue, (Class<Collection<Object>>) rDatatype,
-					(Class<Object>) rAttribute.get(ELEMENT_DATATYPE),
-					rAttribute.hasFlag(ORDERED));
-		} else if (Map.class.isAssignableFrom(rDatatype)) {
-			rResult = parseMap(sValue, (Class<Map<Object, Object>>) rDatatype,
-				(Class<Object>) rAttribute.get(KEY_DATATYPE),
-				(Class<Object>) rAttribute.get(VALUE_DATATYPE),
-				rAttribute.hasFlag(ORDERED));
+			result = Enum.valueOf((Class<Enum>) datatype, value.toUpperCase());
+		} else if (datatype == Period.class) {
+			result = Period.valueOf(value);
+		} else if (Collection.class.isAssignableFrom(datatype)) {
+			result =
+				parseCollection(value, (Class<Collection<Object>>) datatype,
+					(Class<Object>) attribute.get(ELEMENT_DATATYPE),
+					attribute.hasFlag(ORDERED));
+		} else if (Map.class.isAssignableFrom(datatype)) {
+			result = parseMap(value, (Class<Map<Object, Object>>) datatype,
+				(Class<Object>) attribute.get(KEY_DATATYPE),
+				(Class<Object>) attribute.get(VALUE_DATATYPE),
+				attribute.hasFlag(ORDERED));
 		} else {
-			rResult = tryInvokeParseMethod(rDatatype, sValue);
+			result = tryInvokeParseMethod(datatype, value);
 		}
 
-		return rResult;
+		return result;
 	}
 
 	/**
@@ -228,27 +225,26 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 * invoking a constructor of the datatype class with a string argument or,
 	 * if that is not possible or fails a valueOf(String) method.
 	 *
-	 * @param rDatatype The target datatype
-	 * @param sValue    The value to parse
+	 * @param datatype The target datatype
+	 * @param value    The value to parse
 	 * @return The parsed value or the input value if the parsing is not
 	 * possible
 	 */
-	private Object tryInvokeParseMethod(Class<?> rDatatype, String sValue) {
-		Object[] rArgs = new Object[] { sValue };
-		Object rParsedValue = sValue;
+	private Object tryInvokeParseMethod(Class<?> datatype, String value) {
+		Object[] args = new Object[] { value };
+		Object parsedValue = value;
 
 		try {
-			rParsedValue = ReflectUtil.newInstance(rDatatype, rArgs, null);
+			parsedValue = ReflectUtil.newInstance(datatype, args, null);
 		} catch (Exception e) {
 			try {
-				rParsedValue =
-					ReflectUtil.invokePublic(rDatatype, "valueOf", rArgs,
-						null);
+				parsedValue =
+					ReflectUtil.invokePublic(datatype, "valueOf", args, null);
 			} catch (Exception e2) {
 				// just ignore and return the original value
 			}
 		}
 
-		return rParsedValue;
+		return parsedValue;
 	}
 }

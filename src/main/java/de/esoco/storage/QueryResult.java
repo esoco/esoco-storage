@@ -70,11 +70,11 @@ public interface QueryResult<T> extends Closeable, Relatable {
 	 * will be thrown. Some implementations may only support positive index
 	 * values.</p>
 	 *
-	 * @param nIndex    The new position of this result set
-	 * @param bRelative TRUE to set the position relative to the current
-	 *                  position, FALSE to set the absolute position
+	 * @param index    The new position of this result set
+	 * @param relative TRUE to set the position relative to the current
+	 *                 position, FALSE to set the absolute position
 	 * @throws UnsupportedOperationException If positioning is not supported by
 	 *                                       the result implementation
 	 */
-	public void setPosition(int nIndex, boolean bRelative);
+	public void setPosition(int index, boolean relative);
 }

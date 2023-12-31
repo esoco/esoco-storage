@@ -50,23 +50,22 @@ public class TestRecord {
 	/**
 	 * Creates a new instance.
 	 */
-	public TestRecord(int nId, String sName, int nValue, Date rDate,
-		URL rUrl) {
-		this.id = nId;
-		this.date = rDate;
-		this.name = sName;
-		this.value = nValue;
-		this.url = rUrl;
+	public TestRecord(int id, String name, int value, Date date, URL url) {
+		this.id = id;
+		this.date = date;
+		this.name = name;
+		this.value = value;
+		this.url = url;
 	}
 
 	/**
 	 * Adds a detail record.
 	 *
-	 * @param rDetail The new detail record
+	 * @param detail The new detail record
 	 */
-	public void addDetail(TestDetail rDetail) {
-		details.add(rDetail);
-		rDetail.parent = this;
+	public void addDetail(TestDetail detail) {
+		details.add(detail);
+		detail.parent = this;
 	}
 
 	/**

@@ -21,7 +21,6 @@ import de.esoco.lib.expression.Functions;
 import de.esoco.lib.expression.Predicate;
 import de.esoco.lib.expression.StringFunctions;
 import de.esoco.lib.expression.predicate.FunctionPredicate;
-
 import de.esoco.storage.mapping.ClassMapping;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,14 +28,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
-
 import java.util.Date;
 import java.util.Set;
 
 import static de.esoco.lib.expression.Predicates.equalTo;
 import static de.esoco.lib.expression.Predicates.greaterOrEqual;
 import static de.esoco.lib.expression.Predicates.lessThan;
-
 import static de.esoco.storage.StoragePredicates.forType;
 import static de.esoco.storage.StoragePredicates.hasChild;
 import static de.esoco.storage.StoragePredicates.ifField;
@@ -61,7 +58,7 @@ public abstract class AbstractStorageTest {
 
 	static final String TEST_URL = "http://www.example.com/";
 
-	private Storage rStorage = null;
+	private Storage storage = null;
 
 	/**
 	 * Test cleanup that performs a rollback and then releases the test
@@ -71,8 +68,8 @@ public abstract class AbstractStorageTest {
 	 */
 	@AfterEach
 	public void finish() throws StorageException {
-		rStorage.rollback();
-		rStorage.release();
+		storage.rollback();
+		storage.release();
 	}
 
 	/**
@@ -82,20 +79,20 @@ public abstract class AbstractStorageTest {
 	 */
 	@BeforeEach
 	public void initStorage() throws Exception {
-		rStorage = StorageManager.getStorage(TestRecord.class);
+		storage = StorageManager.getStorage(TestRecord.class);
 
-		rStorage.initObjectStorage(TestRecord.class);
+		storage.initObjectStorage(TestRecord.class);
 
-		Query<TestRecord> rQuery =
-			rStorage.query(forType(TestRecord.class, null));
+		Query<TestRecord> query =
+			storage.query(forType(TestRecord.class, null));
 
-		if (!rQuery.execute().hasNext()) {
+		if (!query.execute().hasNext()) {
 			storeTestRecords("jones", 1, 1);
 			storeTestRecords("smith", 2, 2);
-			rStorage.commit();
+			storage.commit();
 		}
 
-		rQuery.close();
+		query.close();
 	}
 
 	/**
@@ -105,7 +102,7 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testAutoDatatypeMapping() throws StorageException {
-		QueryResult<TestRecord> qr = rStorage
+		QueryResult<TestRecord> qr = storage
 			.query(forType(TestRecord.class, ifField("name",
 				equalTo("jones"))))
 			.execute();
@@ -149,13 +146,13 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testObjectStorage() throws StorageException {
-		assertTrue(rStorage.hasObjectStorage(TestRecord.class));
+		assertTrue(storage.hasObjectStorage(TestRecord.class));
 
-		rStorage.removeObjectStorage(TestDetail.class);
-		rStorage.removeObjectStorage(TestRecord.class);
-		assertFalse(rStorage.hasObjectStorage(TestRecord.class));
-		rStorage.initObjectStorage(TestRecord.class);
-		assertTrue(rStorage.hasObjectStorage(TestRecord.class));
+		storage.removeObjectStorage(TestDetail.class);
+		storage.removeObjectStorage(TestRecord.class);
+		assertFalse(storage.hasObjectStorage(TestRecord.class));
+		storage.initObjectStorage(TestRecord.class);
+		assertTrue(storage.hasObjectStorage(TestRecord.class));
 	}
 
 	/**
@@ -164,22 +161,22 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testPaging() throws StorageException {
 //		Query<TestRecord> q =
-//			rStorage.query(forType(TestRecord.class,
+//			storage.query(forType(TestRecord.class,
 //								   sortBy("name").and(sortBy("value"))));
 //
 //		assertEquals(3, q.size());
 //		q.set(StorageRelationTypes.QUERY_OFFSET, 1);
 //		q.set(StorageRelationTypes.QUERY_LIMIT, 1);
 //
-//		QueryResult<TestRecord> aResult = q.execute();
+//		QueryResult<TestRecord> result = q.execute();
 //
-//		assertTrue(aResult.hasNext());
+//		assertTrue(result.hasNext());
 //
-//		TestRecord r = aResult.next();
+//		TestRecord r = result.next();
 //
 //		assertEquals("smith", r.getName());
 //		assertEquals(1, r.getValue());
-//		assertFalse(aResult.hasNext());
+//		assertFalse(result.hasNext());
 //
 //		q.close();
 	}
@@ -191,35 +188,35 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQuery() throws StorageException {
-		Predicate<Object> pWithNameJones = ifField("name", equalTo("jones"));
-		Predicate<Object> pWithNameSmith = ifField("name", equalTo("smith"));
+		Predicate<Object> withNameJones = ifField("name", equalTo("jones"));
+		Predicate<Object> withNameSmith = ifField("name", equalTo("smith"));
 
-		Query<TestRecord> qJones =
-			rStorage.query(forType(TestRecord.class, pWithNameJones));
+		Query<TestRecord> jones =
+			storage.query(forType(TestRecord.class, withNameJones));
 
-		assertEquals(1, getResultSize(qJones.execute()));
+		assertEquals(1, getResultSize(jones.execute()));
 
-		Query<TestRecord> qSmith =
-			rStorage.query(forType(TestRecord.class, pWithNameSmith));
+		Query<TestRecord> smith =
+			storage.query(forType(TestRecord.class, withNameSmith));
 
-		assertEquals(2, getResultSize(qSmith.execute()));
+		assertEquals(2, getResultSize(smith.execute()));
 
-		qJones.close();
-		qSmith.close();
+		jones.close();
+		smith.close();
 
-		Predicate<Object> pSmithOrJones = pWithNameSmith.or(pWithNameJones);
-		Predicate<Object> pSmithAndJones = pWithNameSmith.and(pWithNameJones);
+		Predicate<Object> isSmithOrJones = withNameSmith.or(withNameJones);
+		Predicate<Object> isSmithAndJones = withNameSmith.and(withNameJones);
 
-		Query<TestRecord> qSmithOrJones =
-			rStorage.query(forType(TestRecord.class, pSmithOrJones));
-		Query<TestRecord> qSmithAndJones =
-			rStorage.query(forType(TestRecord.class, pSmithAndJones));
+		Query<TestRecord> querySmithOrJones =
+			storage.query(forType(TestRecord.class, isSmithOrJones));
+		Query<TestRecord> querySmithAndJones =
+			storage.query(forType(TestRecord.class, isSmithAndJones));
 
-		assertEquals(3, getResultSize(qSmithOrJones.execute()));
-		assertEquals(0, getResultSize(qSmithAndJones.execute()));
+		assertEquals(3, getResultSize(querySmithOrJones.execute()));
+		assertEquals(0, getResultSize(querySmithAndJones.execute()));
 
-		qSmithOrJones.close();
-		qSmithAndJones.close();
+		querySmithOrJones.close();
+		querySmithAndJones.close();
 	}
 
 	/**
@@ -229,15 +226,15 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQueryAlmostLike() throws StorageException {
-		Predicate<Object> pWithNameLikeJones =
+		Predicate<Object> withNameLikeJones =
 			ifField("name", similarTo("jones"));
 
-		Query<TestRecord> qJones =
-			rStorage.query(forType(TestRecord.class, pWithNameLikeJones));
+		Query<TestRecord> jones =
+			storage.query(forType(TestRecord.class, withNameLikeJones));
 
-		assertEquals(1, getResultSize(qJones.execute()));
+		assertEquals(1, getResultSize(jones.execute()));
 
-		qJones.close();
+		jones.close();
 	}
 
 	/**
@@ -245,20 +242,20 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQueryDetail() throws StorageException {
-		Query<TestRecord> qByDetail = rStorage.query(forType(TestRecord.class,
+		Query<TestRecord> byDetail = storage.query(forType(TestRecord.class,
 			ifField("details", hasChild(TestDetail.class,
 				ifField("name", equalTo("smith-1"))))));
 
-		assertEquals(2, getResultSize(qByDetail.execute()));
-		qByDetail.close();
+		assertEquals(2, getResultSize(byDetail.execute()));
+		byDetail.close();
 
-		qByDetail = rStorage.query(forType(TestRecord.class, ifField("details",
+		byDetail = storage.query(forType(TestRecord.class, ifField("details",
 			hasChild(TestDetail.class,
 				ifField("name", greaterOrEqual("smith-2")).and(
 					ifField("name", lessThan("smith-3")))))));
 
-		assertEquals(2, getResultSize(qByDetail.execute()));
-		qByDetail.close();
+		assertEquals(2, getResultSize(byDetail.execute()));
+		byDetail.close();
 	}
 
 	/**
@@ -268,22 +265,20 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQueryFunction() throws StorageException {
-		Predicate<Object> pNameIsJones = equalTo("jones");
+		Predicate<Object> nameIsJones = equalTo("jones");
 
-		Function<Object, String> fLowerCaseName = StringFunctions
-			.toLowerCase()
-			.from(Functions.<Object, String>readField("name"));
+		Function<Object, String> lowerCaseName =
+			StringFunctions.toLowerCase().from(Functions.readField("name"));
 
-		FunctionPredicate<Object, String> pFunctionPredicate =
-			new FunctionPredicate<Object, String>(fLowerCaseName,
-				pNameIsJones);
+		FunctionPredicate<Object, String> functionPredicate =
+			new FunctionPredicate<Object, String>(lowerCaseName, nameIsJones);
 
-		Query<TestRecord> qLowerJones =
-			rStorage.query(forType(TestRecord.class, pFunctionPredicate));
+		Query<TestRecord> lowerJones =
+			storage.query(forType(TestRecord.class, functionPredicate));
 
-		assertEquals(1, getResultSize(qLowerJones.execute()));
+		assertEquals(1, getResultSize(lowerJones.execute()));
 
-		qLowerJones.close();
+		lowerJones.close();
 	}
 
 	/**
@@ -294,13 +289,13 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testQueryGetDistinct() throws StorageException {
 		@SuppressWarnings("unchecked")
-		ClassMapping<TestRecord> rMapping =
+		ClassMapping<TestRecord> mapping =
 			(ClassMapping<TestRecord>) StorageManager.getMapping(
 				TestRecord.class);
 
-		Query<TestRecord> q = rStorage.query(forType(TestRecord.class, null));
+		Query<TestRecord> q = storage.query(forType(TestRecord.class, null));
 
-		Set<Object> names = q.getDistinct(rMapping.getFieldDescriptor("name"));
+		Set<Object> names = q.getDistinct(mapping.getFieldDescriptor("name"));
 
 		assertEquals(2, names.size());
 		assertTrue(names.contains("jones"));
@@ -316,14 +311,14 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQueryLike() throws StorageException {
-		Predicate<Object> pWithNameLikeJones = ifField("name", like("%ones"));
+		Predicate<Object> withNameLikeJones = ifField("name", like("%ones"));
 
-		Query<TestRecord> qJones =
-			rStorage.query(forType(TestRecord.class, pWithNameLikeJones));
+		Query<TestRecord> jones =
+			storage.query(forType(TestRecord.class, withNameLikeJones));
 
-		assertEquals(1, getResultSize(qJones.execute()));
+		assertEquals(1, getResultSize(jones.execute()));
 
-		qJones.close();
+		jones.close();
 	}
 
 	/**
@@ -333,7 +328,7 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testQueryPositionOf() throws StorageException {
 		Query<TestRecord> q =
-			rStorage.query(forType(TestRecord.class, sortBy("name", true)));
+			storage.query(forType(TestRecord.class, sortBy("name", true)));
 
 		assertEquals(3, q.size());
 
@@ -349,24 +344,24 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testQueryResultAbsolutePosition() throws StorageException {
 		Query<TestRecord> q =
-			rStorage.query(forType(TestRecord.class, sortBy("name", true)));
+			storage.query(forType(TestRecord.class, sortBy("name", true)));
 
 		assertEquals(3, q.size());
 
-		QueryResult<TestRecord> aResult = q.execute();
+		QueryResult<TestRecord> result = q.execute();
 
 		// first iterate to end
-		while (aResult.hasNext()) {
-			aResult.next();
+		while (result.hasNext()) {
+			result.next();
 		}
 
-		aResult.setPosition(0, false);
-		assertTrue(aResult.hasNext());
-		assertEquals("jones", aResult.next().getName());
+		result.setPosition(0, false);
+		assertTrue(result.hasNext());
+		assertEquals("jones", result.next().getName());
 
-		aResult.setPosition(2, false);
-		assertTrue(aResult.hasNext());
-		assertEquals("smith", aResult.next().getName());
+		result.setPosition(2, false);
+		assertTrue(result.hasNext());
+		assertEquals("smith", result.next().getName());
 
 		q.close();
 	}
@@ -378,24 +373,24 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testQueryResultRelativePosition() throws StorageException {
 		Query<TestRecord> q =
-			rStorage.query(forType(TestRecord.class, sortBy("name", true)));
+			storage.query(forType(TestRecord.class, sortBy("name", true)));
 
 		assertEquals(3, q.size());
 
-		QueryResult<TestRecord> aResult = q.execute();
+		QueryResult<TestRecord> result = q.execute();
 
 		// first iterate to end
-		while (aResult.hasNext()) {
-			aResult.next();
+		while (result.hasNext()) {
+			result.next();
 		}
 
-		aResult.setPosition(-3, true);
-		assertTrue(aResult.hasNext());
-		assertEquals("jones", aResult.next().getName());
+		result.setPosition(-3, true);
+		assertTrue(result.hasNext());
+		assertEquals("jones", result.next().getName());
 
-		aResult.setPosition(2, true);
-		assertTrue(aResult.hasNext());
-		assertEquals("smith", aResult.next().getName());
+		result.setPosition(2, true);
+		assertTrue(result.hasNext());
+		assertEquals("smith", result.next().getName());
 
 		q.close();
 	}
@@ -407,18 +402,18 @@ public abstract class AbstractStorageTest {
 	 */
 	@Test
 	public void testQuerySize() throws StorageException {
-		Query<TestRecord> q = rStorage.query(
+		Query<TestRecord> q = storage.query(
 			forType(TestRecord.class, ifField("name", equalTo("jones"))));
 
 		assertEquals(1, q.size());
 		q.close();
 
-		q = rStorage.query(
+		q = storage.query(
 			forType(TestRecord.class, ifField("name", equalTo("smith"))));
 		assertEquals(2, q.size());
 		q.close();
 
-		q = rStorage.query(
+		q = storage.query(
 			forType(TestRecord.class, ifField("name", equalTo("nothing"))));
 		assertEquals(0, q.size());
 		q.close();
@@ -431,7 +426,7 @@ public abstract class AbstractStorageTest {
 	@Test
 	public void testRepeatInitObjectStorage() throws StorageException {
 		// TestRecord has been create during init already
-		rStorage.initObjectStorage(TestRecord.class);
+		storage.initObjectStorage(TestRecord.class);
 	}
 
 	/**
@@ -454,92 +449,91 @@ public abstract class AbstractStorageTest {
 	 * Returns the size of a query result. The query result argument will be
 	 * closed before returning.
 	 *
-	 * @param rResult The query result to evaluate
+	 * @param result The query result to evaluate
 	 * @return The number of objects returned by the query result
 	 * @throws StorageException If processing the query result fails
 	 */
-	int getResultSize(QueryResult<?> rResult) throws StorageException {
-		int nSize = 0;
+	int getResultSize(QueryResult<?> result) throws StorageException {
+		int size = 0;
 
-		while (rResult.hasNext()) {
-			rResult.next();
-			nSize++;
+		while (result.hasNext()) {
+			result.next();
+			size++;
 		}
 
-		rResult.close();
+		result.close();
 
-		return nSize;
+		return size;
 	}
 
 	/**
 	 * Test method for {@link Storage#delete(Object)}.
 	 */
 	void performDelete() throws StorageException {
-		Predicate<Object> pWithNameJones = ifField("name", equalTo("jones"));
+		Predicate<Object> withNameJones = ifField("name", equalTo("jones"));
 
-		Query<TestRecord> qJones =
-			rStorage.query(forType(TestRecord.class, pWithNameJones));
+		Query<TestRecord> queryJones =
+			storage.query(forType(TestRecord.class, withNameJones));
 
-		QueryResult<TestRecord> rJonesResult = qJones.execute();
+		QueryResult<TestRecord> jonesResult = queryJones.execute();
 
-		assertTrue(rJonesResult.hasNext());
+		assertTrue(jonesResult.hasNext());
 
-		TestRecord rJones = rJonesResult.next();
+		TestRecord jones = jonesResult.next();
 
-		for (TestDetail rJonesDetail : rJones.getDetails()) {
-			rStorage.delete(rJonesDetail);
+		for (TestDetail jonesDetail : jones.getDetails()) {
+			storage.delete(jonesDetail);
 		}
 
-		rStorage.delete(rJones);
-		assertFalse(qJones.execute().hasNext());
+		storage.delete(jones);
+		assertFalse(queryJones.execute().hasNext());
 	}
 
 	/**
 	 * Internal method to perform and test a sorted query.
 	 *
-	 * @param bAscending TRUE for ascending, false for descending ordering
+	 * @param ascending TRUE for ascending, false for descending ordering
 	 * @throws StorageException If the query fails
 	 */
-	void sortedQueryTest(boolean bAscending) throws StorageException {
-		Query<TestRecord> qSmithSorted = rStorage.query(
-			forType(TestRecord.class, ifField("name", equalTo("smith")).and(
-				sortBy("value", bAscending))));
+	void sortedQueryTest(boolean ascending) throws StorageException {
+		Query<TestRecord> smithSorted = storage.query(forType(TestRecord.class,
+			ifField("name", equalTo("smith")).and(sortBy("value", ascending))));
 
-		QueryResult<TestRecord> rResult = qSmithSorted.execute();
-		int nValue = bAscending ? 1 : 2;
+		QueryResult<TestRecord> result = smithSorted.execute();
+		int value = ascending ? 1 : 2;
 
-		while (rResult.hasNext()) {
-			TestRecord rNext = rResult.next();
+		while (result.hasNext()) {
+			TestRecord next = result.next();
 
-			assertTrue(nValue >= 1 && nValue <= 2);
-			assertTrue(rNext.getValue() == nValue);
-			nValue += bAscending ? 1 : -1;
+			assertTrue(value >= 1 && value <= 2);
+			assertEquals(next.getValue(), value);
+			value += ascending ? 1 : -1;
 		}
 
-		rResult.close();
-		qSmithSorted.execute();
+		result.close();
+		smithSorted.execute();
 	}
 
 	/**
 	 * Stores a set of test records.
 	 *
-	 * @param sName    The record name
-	 * @param nIdStart The ID of the first record
-	 * @param nCount   The number of records to store
+	 * @param name    The record name
+	 * @param idStart The ID of the first record
+	 * @param count   The number of records to store
 	 * @throws Exception On errors
 	 */
-	void storeTestRecords(String sName, int nIdStart, int nCount)
+	void storeTestRecords(String name, int idStart, int count)
 		throws Exception {
-		for (int i = 1; i <= nCount; i++) {
-			TestRecord aRecord =
-				new TestRecord(nIdStart + i - 1, sName, i, new Date(),
+		for (int i = 1; i <= count; i++) {
+			TestRecord record =
+				new TestRecord(idStart + i - 1, name, i, new Date(),
 					new URL(TEST_URL + i));
 
 			for (int j = 1; j <= 5; j++) {
-				aRecord.addDetail(new TestDetail(sName + "-" + j, i * 10 + j));
+				record.addDetail(new TestDetail(name + "-" + j, i * 10 + j));
 			}
 
-			rStorage.store(aRecord);
+			storage.store(record);
 		}
 	}
 }

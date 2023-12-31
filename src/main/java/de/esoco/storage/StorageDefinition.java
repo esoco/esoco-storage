@@ -53,7 +53,7 @@ public abstract class StorageDefinition extends SerializableRelatedObject
 	 * @see Object#equals(Object)
 	 */
 	@Override
-	public abstract boolean equals(Object rObj);
+	public abstract boolean equals(Object obj);
 
 	/**
 	 * Must be implemented by subclasses together with {@link #equals(Object)}

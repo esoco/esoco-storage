@@ -57,21 +57,21 @@ public abstract class JdbcStorageDefinition extends StorageDefinition {
 	/**
 	 * Factory method that creates a new instance from a JDBC data source.
 	 *
-	 * @param rDataSource The JDBC data source
+	 * @param dataSource The JDBC data source
 	 * @return The new storage definition
 	 */
-	public static JdbcStorageDefinition create(DataSource rDataSource) {
-		return new JdbcDataSourceStorageDefinition(rDataSource);
+	public static JdbcStorageDefinition create(DataSource dataSource) {
+		return new JdbcDataSourceStorageDefinition(dataSource);
 	}
 
 	/**
 	 * Factory method that creates a new instance from a JDBC connection URL.
 	 *
-	 * @param sConnectURL The URL for the JDBC connection
+	 * @param connectURL The URL for the JDBC connection
 	 * @return The new storage definition
 	 */
-	public static JdbcDriverStorageDefinition create(String sConnectURL) {
-		return new JdbcDriverStorageDefinition(sConnectURL, null);
+	public static JdbcDriverStorageDefinition create(String connectURL) {
+		return new JdbcDriverStorageDefinition(connectURL, null);
 	}
 
 	/**
@@ -79,57 +79,57 @@ public abstract class JdbcStorageDefinition extends StorageDefinition {
 	 * and
 	 * connection properties.
 	 *
-	 * @param sConnectURL The URL for the JDBC connection
-	 * @param rProperties The connection properties
+	 * @param connectURL The URL for the JDBC connection
+	 * @param properties The connection properties
 	 * @return The new storage definition
 	 */
-	public static JdbcDriverStorageDefinition create(String sConnectURL,
-		Properties rProperties) {
-		return new JdbcDriverStorageDefinition(sConnectURL, rProperties);
+	public static JdbcDriverStorageDefinition create(String connectURL,
+		Properties properties) {
+		return new JdbcDriverStorageDefinition(connectURL, properties);
 	}
 
 	/**
 	 * Returns the database parameters for a certain JBDC connection.
 	 *
-	 * @param rConnection The database connection
+	 * @param connection The database connection
 	 * @return The database parameters or NULL to use default values
 	 * @throws SQLException if accessing the connection fails
 	 */
 	@SuppressWarnings("boxing")
-	protected Relatable getDatabaseParameters(Connection rConnection)
+	protected Relatable getDatabaseParameters(Connection connection)
 		throws SQLException {
-		Relatable aParameters = new RelatedObject();
-		String sFuzzyFunction = System.getProperty("storage.sql.fuzzy");
+		Relatable parameters = new RelatedObject();
+		String fuzzyFunction = System.getProperty("storage.sql.fuzzy");
 
-		if (sFuzzyFunction == null) {
-			sFuzzyFunction = "soundex";
+		if (fuzzyFunction == null) {
+			fuzzyFunction = "soundex";
 		}
 
-		String sDatabaseName =
-			rConnection.getMetaData().getDatabaseProductName().toLowerCase();
+		String databaseName =
+			connection.getMetaData().getDatabaseProductName().toLowerCase();
 
-		Map<Class<?>, String> rDatatypeMap = aParameters.get(SQL_DATATYPE_MAP);
+		Map<Class<?>, String> datatypeMap = parameters.get(SQL_DATATYPE_MAP);
 
-		if (sDatabaseName.contains("postgres")) {
-			sFuzzyFunction = "dmetaphone";
+		if (databaseName.contains("postgres")) {
+			fuzzyFunction = "dmetaphone";
 
-			aParameters.set(SQL_AUTO_IDENTITY_DATATYPE, "SERIAL");
-			aParameters.set(SQL_LONG_AUTO_IDENTITY_DATATYPE, "BIGSERIAL");
-			aParameters.set(SQL_QUERY_PAGING_EXPRESSION, null);
-			aParameters.set(SQL_QUERY_LIMIT_EXPRESSION, null);
+			parameters.set(SQL_AUTO_IDENTITY_DATATYPE, "SERIAL");
+			parameters.set(SQL_LONG_AUTO_IDENTITY_DATATYPE, "BIGSERIAL");
+			parameters.set(SQL_QUERY_PAGING_EXPRESSION, null);
+			parameters.set(SQL_QUERY_LIMIT_EXPRESSION, null);
 
-			rDatatypeMap.put(String.class, "TEXT");
-			rDatatypeMap.put(byte[].class, "BYTEA");
-			rDatatypeMap.put(Map.class, "HSTORE");
-			rDatatypeMap.put(JsonObject.class, "JSONB");
-		} else if (sDatabaseName.contains("mysql") ||
-			sDatabaseName.contains("mariadb")) {
-			aParameters.set(SQL_IDENTITIFIER_QUOTE, '`');
-			rDatatypeMap.put(String.class, "TEXT");
+			datatypeMap.put(String.class, "TEXT");
+			datatypeMap.put(byte[].class, "BYTEA");
+			datatypeMap.put(Map.class, "HSTORE");
+			datatypeMap.put(JsonObject.class, "JSONB");
+		} else if (databaseName.contains("mysql") ||
+			databaseName.contains("mariadb")) {
+			parameters.set(SQL_IDENTITIFIER_QUOTE, '`');
+			datatypeMap.put(String.class, "TEXT");
 		}
 
-		aParameters.set(SQL_FUZZY_SEARCH_FUNCTION, sFuzzyFunction);
+		parameters.set(SQL_FUZZY_SEARCH_FUNCTION, fuzzyFunction);
 
-		return aParameters;
+		return parameters;
 	}
 }

@@ -35,8 +35,8 @@ public class StorageRuntimeException extends RuntimeException {
 	/**
 	 * @see RuntimeException#RuntimeException(Throwable)
 	 */
-	public StorageRuntimeException(StorageException eCause) {
-		super(eCause);
+	public StorageRuntimeException(StorageException cause) {
+		super(cause);
 	}
 
 	/**

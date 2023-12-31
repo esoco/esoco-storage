@@ -20,10 +20,9 @@ import de.esoco.storage.Storage;
 import de.esoco.storage.StorageDefinition;
 import de.esoco.storage.StorageException;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import javax.sql.DataSource;
 
 /**
  * A JDBC storage definition that uses a {@link DataSource} to create database
@@ -35,15 +34,15 @@ class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition {
 
 	private static final long serialVersionUID = 1L;
 
-	private final DataSource rDataSource;
+	private final DataSource dataSource;
 
 	/**
 	 * Creates a new instance with a particular JDBC data source.
 	 *
-	 * @param rDataSource The JDBC data source
+	 * @param dataSource The JDBC data source
 	 */
-	JdbcDataSourceStorageDefinition(DataSource rDataSource) {
-		this.rDataSource = rDataSource;
+	JdbcDataSourceStorageDefinition(DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 
 	/**
@@ -53,19 +52,19 @@ class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition {
 	 * @see StorageDefinition#equals(Object)
 	 */
 	@Override
-	public boolean equals(Object rObject) {
-		if (this == rObject) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (rObject == null || getClass() != rObject.getClass()) {
+		if (object == null || getClass() != object.getClass()) {
 			return false;
 		}
 
-		JdbcDataSourceStorageDefinition rOther =
-			(JdbcDataSourceStorageDefinition) rObject;
+		JdbcDataSourceStorageDefinition other =
+			(JdbcDataSourceStorageDefinition) object;
 
-		return rDataSource.equals(rOther.rDataSource);
+		return dataSource.equals(other.dataSource);
 	}
 
 	/**
@@ -73,7 +72,7 @@ class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition {
 	 */
 	@Override
 	public int hashCode() {
-		return 37 * rDataSource.hashCode();
+		return 37 * dataSource.hashCode();
 	}
 
 	/**
@@ -84,12 +83,12 @@ class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition {
 	@Override
 	protected Storage createStorage() throws StorageException {
 		try {
-			Connection rConnection = rDataSource.getConnection();
+			Connection connection = dataSource.getConnection();
 
-			JdbcStorage aStorage = new JdbcStorage(rConnection,
-				getDatabaseParameters(rConnection));
+			JdbcStorage storage =
+				new JdbcStorage(connection, getDatabaseParameters(connection));
 
-			return aStorage;
+			return storage;
 		} catch (SQLException e) {
 			throw new StorageException("Storage creation failed", e);
 		}

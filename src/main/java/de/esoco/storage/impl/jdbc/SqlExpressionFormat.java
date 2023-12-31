@@ -28,13 +28,13 @@ public interface SqlExpressionFormat {
 	/**
 	 * Formats an expression predicate with the given values.
 	 *
-	 * @param rStorage    The JDBC storage to format the expressionfor
-	 * @param pExpression The expression predicate
-	 * @param sColumn     The column to format the expression for
-	 * @param sValue      The compare value(s) or value placeholders
-	 * @param bNegate     TRUE if the expression should be negated
+	 * @param storage    The JDBC storage to format the expressionfor
+	 * @param expression The expression predicate
+	 * @param column     The column to format the expression for
+	 * @param value      The compare value(s) or value placeholders
+	 * @param negate     TRUE if the expression should be negated
 	 * @return The resulting expression string
 	 */
-	public String format(JdbcStorage rStorage, Predicate<?> pExpression,
-		String sColumn, String sValue, boolean bNegate);
+	public String format(JdbcStorage storage, Predicate<?> expression,
+		String column, String value, boolean negate);
 }

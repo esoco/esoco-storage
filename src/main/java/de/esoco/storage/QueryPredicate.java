@@ -17,7 +17,6 @@
 package de.esoco.storage;
 
 import de.esoco.lib.expression.Predicate;
-
 import org.obrel.core.RelatedObject;
 
 /**
@@ -30,50 +29,48 @@ import org.obrel.core.RelatedObject;
  */
 public class QueryPredicate<T> extends RelatedObject implements Predicate<T> {
 
-	private final Class<T> rQueryType;
+	private final Class<T> queryType;
 
-	private final Predicate<? super T> rCriteria;
+	private final Predicate<? super T> criteria;
 
 	/**
 	 * Creates a new instance for a certain class and query criteria.
 	 *
-	 * @param rQueryType The class of the objects to be queried
-	 * @param rCriteria  The query criteria predicate
+	 * @param queryType The class of the objects to be queried
+	 * @param criteria  The query criteria predicate
 	 */
-	public QueryPredicate(Class<T> rQueryType,
-		Predicate<? super T> rCriteria) {
-		this.rQueryType = rQueryType;
-		this.rCriteria = rCriteria;
+	public QueryPredicate(Class<T> queryType, Predicate<? super T> criteria) {
+		this.queryType = queryType;
+		this.criteria = criteria;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean equals(Object rObj) {
-		if (this == rObj) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
 
-		if (rObj == null || getClass() != rObj.getClass()) {
+		if (obj == null || getClass() != obj.getClass()) {
 			return false;
 		}
 
-		QueryPredicate<?> rOther = (QueryPredicate<?>) rObj;
+		QueryPredicate<?> other = (QueryPredicate<?>) obj;
 
-		return rQueryType == rOther.rQueryType &&
-			rCriteria.equals(rOther.rCriteria);
+		return queryType == other.queryType && criteria.equals(other.criteria);
 	}
 
 	/**
 	 * Evaluates the argument value with the query criteria of this instance.
 	 *
-	 * @param rValue The value to evaluate
+	 * @param value The value to evaluate
 	 * @return The result of the evaluation
 	 */
 	@Override
-	public Boolean evaluate(T rValue) {
-		return rCriteria.evaluate(rValue);
+	public Boolean evaluate(T value) {
+		return criteria.evaluate(value);
 	}
 
 	/**
@@ -82,7 +79,7 @@ public class QueryPredicate<T> extends RelatedObject implements Predicate<T> {
 	 * @return The query criteria predicate
 	 */
 	public final Predicate<? super T> getCriteria() {
-		return rCriteria;
+		return criteria;
 	}
 
 	/**
@@ -91,7 +88,7 @@ public class QueryPredicate<T> extends RelatedObject implements Predicate<T> {
 	 * @return The query type
 	 */
 	public final Class<T> getQueryType() {
-		return rQueryType;
+		return queryType;
 	}
 
 	/**
@@ -99,6 +96,6 @@ public class QueryPredicate<T> extends RelatedObject implements Predicate<T> {
 	 */
 	@Override
 	public int hashCode() {
-		return 31 * (rQueryType.hashCode() + 31 * rCriteria.hashCode());
+		return 31 * (queryType.hashCode() + 31 * criteria.hashCode());
 	}
 }

@@ -46,7 +46,7 @@ public abstract class Storage extends RelatedObject
 	public static final String PROPERTY_DELETE_DISABLED =
 		"esoco.storage.disable_delete";
 
-	int nUsageCount = 1;
+	int usageCount = 1;
 
 	/**
 	 * Method from the {@link Transactional} interface that commits the
@@ -61,13 +61,12 @@ public abstract class Storage extends RelatedObject
 	/**
 	 * Deletes a particular object from the storage.
 	 *
-	 * @param rObject The object to delete
+	 * @param object The object to delete
 	 * @throws StorageException If deleting the object fails
 	 */
-	public final void delete(Object rObject) throws StorageException {
-		checkStorageDeleteEnabled(
-			StorageManager.getMapping(rObject.getClass()));
-		deleteObject(rObject);
+	public final void delete(Object object) throws StorageException {
+		checkStorageDeleteEnabled(StorageManager.getMapping(object.getClass()));
+		deleteObject(object);
 	}
 
 	/**
@@ -82,15 +81,15 @@ public abstract class Storage extends RelatedObject
 	 * particular
 	 * object type.
 	 *
-	 * @param rStoredType The object type to check for initialization
+	 * @param storedType The object type to check for initialization
 	 * @return TRUE if the object storage has been initialized
 	 * @throws StorageException If querying the storage implementation fails
 	 * @see #initObjectStorage(Class)
 	 * @see #removeObjectStorage(Class)
 	 */
-	public final boolean hasObjectStorage(Class<?> rStoredType)
+	public final boolean hasObjectStorage(Class<?> storedType)
 		throws StorageException {
-		return hasObjectStorage(StorageManager.getMapping(rStoredType));
+		return hasObjectStorage(StorageManager.getMapping(storedType));
 	}
 
 	/**
@@ -110,14 +109,14 @@ public abstract class Storage extends RelatedObject
 	 * avoided if possible. If necessary the call should occur during
 	 * application initialization only.</p>
 	 *
-	 * @param rStoredType The object type to initialize the storage for
+	 * @param storedType The object type to initialize the storage for
 	 * @throws StorageException If the initialization fails
 	 * @see #hasObjectStorage(Class)
 	 * @see #removeObjectStorage(Class)
 	 */
-	public final void initObjectStorage(Class<?> rStoredType)
+	public final void initObjectStorage(Class<?> storedType)
 		throws StorageException {
-		initObjectStorage(StorageManager.getMapping(rStoredType));
+		initObjectStorage(StorageManager.getMapping(storedType));
 	}
 
 	/**
@@ -137,11 +136,11 @@ public abstract class Storage extends RelatedObject
 	 * contains the mapping of the objects to be queried as well as the query
 	 * criteria.
 	 *
-	 * @param rQueryPredicate The predicate that defines the query
+	 * @param queryPredicate The predicate that defines the query
 	 * @return A query object matching the given query predicate
 	 * @throws StorageException If creating the query fails
 	 */
-	public abstract <T> Query<T> query(QueryPredicate<T> rQueryPredicate)
+	public abstract <T> Query<T> query(QueryPredicate<T> queryPredicate)
 		throws StorageException;
 
 	/**
@@ -181,18 +180,18 @@ public abstract class Storage extends RelatedObject
 	 * of storage data. If an application wants to remove a hierarchy of object
 	 * storages it must invoke this method explicitly for each type.</p>
 	 *
-	 * @param rStoredType The object type to initialize the storage for
+	 * @param storedType The object type to initialize the storage for
 	 * @throws StorageException If the initialization fails
 	 * @see #initObjectStorage(Class)
 	 * @see #hasObjectStorage(Class)
 	 */
-	public void removeObjectStorage(Class<?> rStoredType)
+	public void removeObjectStorage(Class<?> storedType)
 		throws StorageException {
-		StorageMapping<?, ?, ?> rMapping =
-			StorageManager.getMapping(rStoredType);
+		StorageMapping<?, ?, ?> mapping =
+			StorageManager.getMapping(storedType);
 
-		checkStorageDeleteEnabled(rMapping);
-		removeObjectStorage(rMapping);
+		checkStorageDeleteEnabled(mapping);
+		removeObjectStorage(mapping);
 	}
 
 	/**
@@ -218,14 +217,14 @@ public abstract class Storage extends RelatedObject
 	 * implemented by subclasses. If a storage implementation provides a more
 	 * efficient way to store collections it may also override this method.
 	 *
-	 * @param rObject The object or collection of objects to store
+	 * @param object The object or collection of objects to store
 	 * @throws StorageException If storing an object fails
 	 */
-	public final void store(Object rObject) throws StorageException {
-		if (rObject instanceof Collection<?>) {
-			storeCollection((Collection<?>) rObject);
+	public final void store(Object object) throws StorageException {
+		if (object instanceof Collection<?>) {
+			storeCollection((Collection<?>) object);
 		} else {
-			storeSingleObject(rObject);
+			storeSingleObject(object);
 		}
 	}
 
@@ -233,14 +232,14 @@ public abstract class Storage extends RelatedObject
 	 * Checks whether deleting from this storage is enabled in the current
 	 * context and for a given type. If not an exception will be thrown.
 	 *
-	 * @param rMapping The mapping of the type to be deleted from the storage
+	 * @param mapping The mapping of the type to be deleted from the storage
 	 * @throws StorageException If deleting is not enabled
 	 */
-	protected void checkStorageDeleteEnabled(StorageMapping<?, ?, ?> rMapping)
+	protected void checkStorageDeleteEnabled(StorageMapping<?, ?, ?> mapping)
 		throws StorageException {
-		if (!rMapping.isDeleteAllowed()) {
+		if (!mapping.isDeleteAllowed()) {
 			throw new StorageException(String.format("Delete not enabled for ",
-				rMapping.getMappedType()));
+				mapping.getMappedType()));
 		} else if (Boolean.getBoolean(PROPERTY_DELETE_DISABLED)) {
 			throw new StorageException("Delete globally disabled");
 		}
@@ -262,11 +261,10 @@ public abstract class Storage extends RelatedObject
 	/**
 	 * Must be implemented by subclasses to delete an object from the storage.
 	 *
-	 * @param rObject The object to delete from the storage
+	 * @param object The object to delete from the storage
 	 * @throws StorageException If deleting the object fails
 	 */
-	protected abstract void deleteObject(Object rObject)
-		throws StorageException;
+	protected abstract void deleteObject(Object object) throws StorageException;
 
 	/**
 	 * Must be implemented by subclasses to check whether a storage has already
@@ -274,8 +272,8 @@ public abstract class Storage extends RelatedObject
 	 *
 	 * @see #hasObjectStorage(Class)
 	 */
-	protected abstract boolean hasObjectStorage(
-		StorageMapping<?, ?, ?> rMapping) throws StorageException;
+	protected abstract boolean hasObjectStorage(StorageMapping<?, ?, ?> mapping)
+		throws StorageException;
 
 	/**
 	 * Must be implemented by subclasses to initialize a storage for a certain
@@ -286,7 +284,7 @@ public abstract class Storage extends RelatedObject
 	 *
 	 * @see #initObjectStorage(Class)
 	 */
-	protected abstract void initObjectStorage(StorageMapping<?, ?, ?> rMapping)
+	protected abstract void initObjectStorage(StorageMapping<?, ?, ?> mapping)
 		throws StorageException;
 
 	/**
@@ -298,8 +296,8 @@ public abstract class Storage extends RelatedObject
 	 *
 	 * @see #removeObjectStorage(Class)
 	 */
-	protected abstract void removeObjectStorage(
-		StorageMapping<?, ?, ?> rMapping) throws StorageException;
+	protected abstract void removeObjectStorage(StorageMapping<?, ?, ?> mapping)
+		throws StorageException;
 
 	/**
 	 * Stores a collection of objects. The default implementation invokes the
@@ -307,66 +305,66 @@ public abstract class Storage extends RelatedObject
 	 * overridden buy subclasses that provide a more efficient way to store
 	 * multiple objects.
 	 *
-	 * @param rObjects The collection of objects to store
+	 * @param objects The collection of objects to store
 	 * @throws StorageException If storing an object fails
 	 */
-	protected void storeCollection(Collection<?> rObjects)
+	protected void storeCollection(Collection<?> objects)
 		throws StorageException {
-		for (Object rElement : rObjects) {
-			storeSingleObject(rElement);
+		for (Object element : objects) {
+			storeSingleObject(element);
 		}
 	}
 
 	/**
 	 * This method must be implemented by subclasses to store a single object.
 	 *
-	 * @param rObject The object to store
+	 * @param object The object to store
 	 * @throws Exception Any exception may be thrown if storing the object
 	 *                   fails
 	 */
-	protected abstract void storeObject(Object rObject) throws Exception;
+	protected abstract void storeObject(Object object) throws Exception;
 
 	/**
 	 * Internal method to execute the storing of a single object.
 	 *
-	 * @param rObject The object to store
+	 * @param object The object to store
 	 * @throws StorageException If storing the object fails
 	 */
-	private void storeSingleObject(Object rObject) throws StorageException {
-		Relatable rObjectRelatable = ObjectRelations.getRelatable(rObject);
+	private void storeSingleObject(Object object) throws StorageException {
+		Relatable objectRelatable = ObjectRelations.getRelatable(object);
 
-		rObjectRelatable.set(STORING);
+		objectRelatable.set(STORING);
 
 		try {
-			storeObject(rObject);
+			storeObject(object);
 
 			// PERSISTENT is final, therefore only set if it doesn't exist
-			if (!rObjectRelatable.hasRelation(PERSISTENT)) {
-				rObjectRelatable.set(PERSISTENT);
+			if (!objectRelatable.hasRelation(PERSISTENT)) {
+				objectRelatable.set(PERSISTENT);
 			}
 
 			// only reset MODIFIED flag if relation exists, i.e. object
 			// supports
 			// modification tracking
-			if (rObjectRelatable.hasRelation(MODIFIED)) {
-				rObjectRelatable.set(MODIFIED, Boolean.FALSE);
+			if (objectRelatable.hasRelation(MODIFIED)) {
+				objectRelatable.set(MODIFIED, Boolean.FALSE);
 			}
 
 			// After store handler must be invoked AFTER setting flags!
-			if (rObject instanceof AfterStoreHandler) {
-				((AfterStoreHandler) rObject).afterStore();
+			if (object instanceof AfterStoreHandler) {
+				((AfterStoreHandler) object).afterStore();
 			}
 		} catch (Exception e) {
 			if (e instanceof StorageException) {
 				throw (StorageException) e;
 			} else {
-				String sMessage = "Store failed: " + rObject;
+				String message = "Store failed: " + object;
 
-				Log.error(sMessage, e);
-				throw new StorageException(sMessage, e);
+				Log.error(message, e);
+				throw new StorageException(message, e);
 			}
 		} finally {
-			rObjectRelatable.deleteRelation(STORING);
+			objectRelatable.deleteRelation(STORING);
 		}
 	}
 }

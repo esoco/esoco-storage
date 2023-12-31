@@ -171,12 +171,12 @@ public class JdbcRelationTypes {
 	 * which exists as a semantic complement to
 	 * {@link #column(String, RelationTypeModifier...)}.
 	 *
-	 * @param rModifiers The optional relation type modifiers modifiers
+	 * @param modifiers The optional relation type modifiers modifiers
 	 * @return The new relation type
 	 */
 	public static <T> RelationType<T> column(
-		RelationTypeModifier... rModifiers) {
-		return newType(rModifiers);
+		RelationTypeModifier... modifiers) {
+		return newType(modifiers);
 	}
 
 	/**
@@ -191,15 +191,15 @@ public class JdbcRelationTypes {
 	 * a standard annotation needs to be used instead (with a more verbose
 	 * generic declaration).</p>
 	 *
-	 * @param sColumnName The SQL column name
-	 * @param rModifiers  The optional relation type modifiers modifiers
+	 * @param columnName The SQL column name
+	 * @param modifiers  The optional relation type modifiers modifiers
 	 * @return The new relation type
 	 */
-	public static <T> RelationType<T> column(String sColumnName,
-		RelationTypeModifier... rModifiers) {
-		RelationType<T> aColumnType = newType(rModifiers);
+	public static <T> RelationType<T> column(String columnName,
+		RelationTypeModifier... modifiers) {
+		RelationType<T> columnType = newType(modifiers);
 
-		return aColumnType.annotate(SQL_NAME, sColumnName);
+		return columnType.annotate(SQL_NAME, columnName);
 	}
 
 	/**
