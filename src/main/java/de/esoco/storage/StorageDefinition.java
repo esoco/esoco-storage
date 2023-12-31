@@ -20,8 +20,7 @@ import de.esoco.lib.manage.ElementDefinition;
 
 import org.obrel.core.SerializableRelatedObject;
 
-
-/********************************************************************
+/**
  * An abstract base class that defines a storage that can be created by the
  * class {@link StorageManager}. Subclasses must implement the abstract method
  * {@link #createStorage()} to create a new storage instance that corresponds to
@@ -37,24 +36,17 @@ import org.obrel.core.SerializableRelatedObject;
  * @author eso
  */
 public abstract class StorageDefinition extends SerializableRelatedObject
-	implements ElementDefinition<Storage>
-{
-	//~ Static fields/initializers ---------------------------------------------
+	implements ElementDefinition<Storage> {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Creates a new StorageDefinition instance.
 	 */
-	public StorageDefinition()
-	{
+	public StorageDefinition() {
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Must be implemented by subclasses together with {@link #hashCode()} to
 	 * perform an equality test that is not based on object identity.
 	 *
@@ -63,7 +55,7 @@ public abstract class StorageDefinition extends SerializableRelatedObject
 	@Override
 	public abstract boolean equals(Object rObj);
 
-	/***************************************
+	/**
 	 * Must be implemented by subclasses together with {@link #equals(Object)}
 	 * to calculate a hash code that is not based on object identity.
 	 *
@@ -72,11 +64,10 @@ public abstract class StorageDefinition extends SerializableRelatedObject
 	@Override
 	public abstract int hashCode();
 
-	/***************************************
+	/**
 	 * Must be implemented by subclasses to create a new storage instance.
 	 *
 	 * @return The new storage instance
-	 *
 	 * @throws StorageException If creating the storage fails
 	 */
 	protected abstract Storage createStorage() throws StorageException;

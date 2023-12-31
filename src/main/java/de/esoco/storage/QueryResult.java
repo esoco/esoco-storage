@@ -20,8 +20,7 @@ import de.esoco.lib.manage.Closeable;
 
 import org.obrel.core.Relatable;
 
-
-/********************************************************************
+/**
  * An interface that defines the methods for the iteration over the result of a
  * storage query. A result set must be closed after it has been used. If the end
  * of the result set is reached (i.e. FALSE is returned by {@link #hasNext()} a
@@ -32,51 +31,48 @@ import org.obrel.core.Relatable;
  *
  * @author eso
  */
-public interface QueryResult<T> extends Closeable, Relatable
-{
-	//~ Methods ----------------------------------------------------------------
+public interface QueryResult<T> extends Closeable, Relatable {
 
-	/***************************************
+	/**
 	 * Checks whether more objects are available in this query result. This
 	 * method must be invoked before each call to the {@link #next()} method,
 	 * else the next result will be undetermined.
 	 *
 	 * @return TRUE if this result contains more objects
-	 *
 	 * @throws StorageException If determining the result state fails
 	 */
 	public boolean hasNext() throws StorageException;
 
-	/***************************************
+	/**
 	 * Returns the next object from this query result. A call to this method is
 	 * only possible if the {@link #hasNext()} method has been invoked before.
 	 *
 	 * @return The next object in this result
-	 *
 	 * @throws StorageException If retrieving the object data fails
 	 */
 	public T next() throws StorageException;
 
-	/***************************************
+	/**
 	 * Sets the current position of this result. If the new position is valid
 	 * (i.e. this method returns TRUE) the next call to {@link #next()} will
-	 * return the object at the given position. The index of the first object is
+	 * return the object at the given position. The index of the first
+	 * object is
 	 * 0. Negative index values will position the result from the end where -1
 	 * indicates the last object. A relative position of 0 corresponds to the
 	 * current position, i.e. no change. The result will typically only be
-	 * positioned on the designated record when the method {@link #hasNext()} is
-	 * invoked before querying the object at the given position with {@link
-	 * #next()}.
+	 * positioned on the designated record when the method
+	 * {@link #hasNext()} is
+	 * invoked before querying the object at the given position with
+	 * {@link #next()}.
 	 *
 	 * <p>This is an optional operation which may not be supported by some
 	 * implementations in which case an {@link UnsupportedOperationException}
 	 * will be thrown. Some implementations may only support positive index
 	 * values.</p>
 	 *
-	 * @param  nIndex    The new position of this result set
-	 * @param  bRelative TRUE to set the position relative to the current
-	 *                   position, FALSE to set the absolute position
-	 *
+	 * @param nIndex    The new position of this result set
+	 * @param bRelative TRUE to set the position relative to the current
+	 *                  position, FALSE to set the absolute position
 	 * @throws UnsupportedOperationException If positioning is not supported by
 	 *                                       the result implementation
 	 */

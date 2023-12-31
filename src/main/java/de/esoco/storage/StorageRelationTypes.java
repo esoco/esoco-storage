@@ -29,8 +29,7 @@ import static org.obrel.core.RelationTypes.newFlagType;
 import static org.obrel.core.RelationTypes.newIntType;
 import static org.obrel.core.RelationTypes.newType;
 
-
-/********************************************************************
+/**
  * This class contains relation types for storage implementations. Besides
  * generic types it also defines some types for certain storage implementations,
  * i.e. mainly for relations with metadata for the SQL/JDBC implementation.
@@ -38,9 +37,7 @@ import static org.obrel.core.RelationTypes.newType;
  * @author eso
  */
 @RelationTypeNamespace("de.esoco.storage")
-public class StorageRelationTypes
-{
-	//~ Static fields/initializers ---------------------------------------------
+public class StorageRelationTypes {
 
 	/**
 	 * A flag that is mainly used internally by storage implementations to
@@ -56,13 +53,15 @@ public class StorageRelationTypes
 	 * set by storage implementations on objects that have been stored in or
 	 * read from the underlying storage. The flag is final because a persistent
 	 * object is considered to be associated with the corresponding object for
-	 * it's full lifetime. Therefore, to store an object as new in the same or a
+	 * it's full lifetime. Therefore, to store an object as new in the same
+	 * or a
 	 * different storage a copy of the original object must be created.
 	 */
 	public static final RelationType<Boolean> PERSISTENT = newFlagType();
 
 	/**
-	 * Indicates that an attribute references another object in the storage that
+	 * Indicates that an attribute references another object in the storage
+	 * that
 	 * needs to be modeled (e.g. with a foreign key constraint in a relational
 	 * database).
 	 */
@@ -73,8 +72,8 @@ public class StorageRelationTypes
 	 * Contains the generic storage name of an element. This name will be used
 	 * to represent an object in a storage if the storage implementation
 	 * supports such naming and if no property that is more specific to the
-	 * respective storage implementation is set on the object (like {@link
-	 * JdbcRelationTypes#SQL_NAME}).
+	 * respective storage implementation is set on the object (like
+	 * {@link JdbcRelationTypes#SQL_NAME}).
 	 */
 	public static final RelationType<String> STORAGE_NAME = newType();
 
@@ -93,21 +92,29 @@ public class StorageRelationTypes
 	 * attribute is evaluated. If it is not the default value (2048) will be
 	 * used.
 	 */
-	public static final RelationType<Integer> STORAGE_LENGTH = newIntType(2048);
+	public static final RelationType<Integer> STORAGE_LENGTH =
+		newIntType(2048);
 
-	/** Contains a reference to the storage definition of a storage. */
+	/**
+	 * Contains a reference to the storage definition of a storage.
+	 */
 	public static final RelationType<StorageDefinition> STORAGE_DEFINITION =
 		newType();
 
-	/** Contains the storage mapping for the object where it has been set on. */
+	/**
+	 * Contains the storage mapping for the object where it has been set on.
+	 */
 	public static final RelationType<StorageMapping<?, ?, ?>> STORAGE_MAPPING =
 		newType();
 
 	/**
-	 * Defines the maximum depth which a query should descend in the graph of an
+	 * Defines the maximum depth which a query should descend in the graph
+	 * of an
 	 * object. If this relation is not set the complete hierarchy of an object
-	 * will be fetched. A value of zero means that no children should be fetched
-	 * at all. This relation can be set on many storage-related objects as shown
+	 * will be fetched. A value of zero means that no children should be
+	 * fetched
+	 * at all. This relation can be set on many storage-related objects as
+	 * shown
 	 * below. The priority is from top to bottom, i.e. the topmost relations
 	 * override the lower (more generic) ones:
 	 *
@@ -141,17 +148,22 @@ public class StorageRelationTypes
 		newDefaultValueType(0);
 
 	/**
-	 * Can be set on a storage query to limit the number of records that will be
+	 * Can be set on a storage query to limit the number of records that
+	 * will be
 	 * returned by the query. The default value is zero for no limit.
 	 */
 	@SuppressWarnings("boxing")
 	public static final RelationType<Integer> QUERY_LIMIT =
 		newDefaultValueType(0);
 
-	/** A generic relation to a storage {@link Query}. */
+	/**
+	 * A generic relation to a storage {@link Query}.
+	 */
 	public static final RelationType<Query<?>> STORAGE_QUERY = newType();
 
-	/** A generic relation to a storage {@link QueryResult query result}. */
+	/**
+	 * A generic relation to a storage {@link QueryResult query result}.
+	 */
 	public static final RelationType<QueryResult<?>> STORAGE_QUERY_RESULT =
 		newType();
 
@@ -165,8 +177,8 @@ public class StorageRelationTypes
 	 * References an arbitrary {@link QueryPredicate} that can be used to
 	 * perform storage queries.
 	 */
-	public static final RelationType<QueryPredicate<?>> STORAGE_QUERY_PREDICATE =
-		newType();
+	public static final RelationType<QueryPredicate<?>>
+		STORAGE_QUERY_PREDICATE = newType();
 
 	/**
 	 * References an arbitrary {@link Function} that is used in a storage
@@ -181,27 +193,21 @@ public class StorageRelationTypes
 	 */
 	public static final RelationType<Boolean> IS_CHILD_QUERY = newFlagType();
 
-	static
-	{
+	static {
 		RelationTypes.init(StorageRelationTypes.class);
 	}
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Private, only static use.
 	 */
-	private StorageRelationTypes()
-	{
+	private StorageRelationTypes() {
 	}
 
-	//~ Static methods ---------------------------------------------------------
-
-	/***************************************
-	 * Package-internal method to initialize the relation types that are defined
+	/**
+	 * Package-internal method to initialize the relation types that are
+	 * defined
 	 * in this class.
 	 */
-	static void init()
-	{
+	static void init() {
 	}
 }

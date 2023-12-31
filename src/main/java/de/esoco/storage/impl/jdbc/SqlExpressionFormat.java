@@ -18,30 +18,23 @@ package de.esoco.storage.impl.jdbc;
 
 import de.esoco.lib.expression.Predicate;
 
-
-/********************************************************************
+/**
  * An interface for the formatting of expressions in SQL statements.
  *
  * @author eso
  */
-public interface SqlExpressionFormat
-{
-	//~ Methods ----------------------------------------------------------------
+public interface SqlExpressionFormat {
 
-	/***************************************
+	/**
 	 * Formats an expression predicate with the given values.
 	 *
-	 * @param  rStorage    The JDBC storage to format the expressionfor
-	 * @param  pExpression The expression predicate
-	 * @param  sColumn     The column to format the expression for
-	 * @param  sValue      The compare value(s) or value placeholders
-	 * @param  bNegate     TRUE if the expression should be negated
-	 *
+	 * @param rStorage    The JDBC storage to format the expressionfor
+	 * @param pExpression The expression predicate
+	 * @param sColumn     The column to format the expression for
+	 * @param sValue      The compare value(s) or value placeholders
+	 * @param bNegate     TRUE if the expression should be negated
 	 * @return The resulting expression string
 	 */
-	public String format(JdbcStorage  rStorage,
-						 Predicate<?> pExpression,
-						 String		  sColumn,
-						 String		  sValue,
-						 boolean	  bNegate);
+	public String format(JdbcStorage rStorage, Predicate<?> pExpression,
+		String sColumn, String sValue, boolean bNegate);
 }

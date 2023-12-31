@@ -16,91 +16,78 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
-/********************************************************************
+/**
  * Detail data for test records.
  *
  * @author eso
  */
-public class TestDetail
-{
-	//~ Instance fields --------------------------------------------------------
+public class TestDetail {
 
-	TestRecord     parent;
-	private int    id    = -1;
+	TestRecord parent;
+
+	private int id = -1;
+
 	private String name;
-	private int    value;
 
-	//~ Constructors -----------------------------------------------------------
+	private int value;
 
-	/***************************************
+	/**
 	 * Default constructor.
 	 */
-	public TestDetail()
-	{
+	public TestDetail() {
 	}
 
-	/***************************************
+	/**
 	 * Creates a new instance.
-	 *
-	 * @param sName
-	 * @param nValue
 	 */
-	public TestDetail(String sName, int nValue)
-	{
-		this.name  = sName;
+	public TestDetail(String sName, int nValue) {
+		this.name = sName;
 		this.value = nValue;
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Returns the id.
 	 *
 	 * @return The id
 	 */
-	public final int getId()
-	{
+	public final int getId() {
 		return id;
 	}
 
-	/***************************************
+	/**
 	 * Returns the name.
 	 *
 	 * @return The name
 	 */
-	public final String getName()
-	{
+	public final String getName() {
 		return name;
 	}
 
-	/***************************************
+	/**
 	 * Returns the parent.
 	 *
 	 * @return The parent
 	 */
-	public final TestRecord getParent()
-	{
+	public final TestRecord getParent() {
 		return parent;
 	}
 
-	/***************************************
+	/**
 	 * Returns the value.
 	 *
 	 * @return The value
 	 */
-	public final int getValue()
-	{
+	public final int getValue() {
 		return value;
 	}
 
-	/***************************************
+	/**
 	 * toString method
 	 *
 	 * @return a string
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "TestDetail[" + name + ", " + value + "]";
 	}
 }

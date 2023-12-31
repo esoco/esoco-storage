@@ -21,30 +21,25 @@ import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageManager;
 import org.junit.jupiter.api.BeforeAll;
 
-/********************************************************************
+/**
  * JDBC specific storage test implementation.
  *
  * @author eso
  */
-public class JdbcStorageTest extends AbstractStorageTest
-{
-	//~ Static methods ---------------------------------------------------------
+public class JdbcStorageTest extends AbstractStorageTest {
 
-	/***************************************
+	/**
 	 * Initializes the storage for this test.
 	 *
 	 * @throws StorageException If the storage initialization fails
 	 */
 	@BeforeAll
-	public static void init() throws StorageException
-	{
-		try
-		{
+	public static void init() throws StorageException {
+		try {
 			Class.forName("org.h2.Driver");
-			StorageManager.setDefaultStorage(JdbcStorageDefinition.create("jdbc:h2:mem:testdb;user=sa;password="));
-		}
-		catch (ClassNotFoundException e)
-		{
+			StorageManager.setDefaultStorage(JdbcStorageDefinition.create(
+				"jdbc:h2:mem:testdb;user=sa;password="));
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			throw new IllegalStateException(e);
 		}

@@ -16,17 +16,15 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
-/********************************************************************
+/**
  * An interface that can be implemented by objects that perform some operations
  * after they have been stored by a {@link Storage} implementation.
  *
  * @author eso
  */
-public interface AfterStoreHandler
-{
-	//~ Methods ----------------------------------------------------------------
+public interface AfterStoreHandler {
 
-	/***************************************
+	/**
 	 * Will be invoked after the object has been stored in a {@link Storage}.
 	 *
 	 * @throws Exception Any exception may be thrown to signal a failure

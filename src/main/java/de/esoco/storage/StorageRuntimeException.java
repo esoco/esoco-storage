@@ -16,45 +16,36 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
-/********************************************************************
+/**
  * A runtime exception that can be used if checked exceptions are not supported
  * to wrap instances of {@link StorageException}.
  *
  * @author eso
  */
-public class StorageRuntimeException extends RuntimeException
-{
-	//~ Static fields/initializers ---------------------------------------------
+public class StorageRuntimeException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * @see RuntimeException#RuntimeException()
 	 */
-	public StorageRuntimeException()
-	{
+	public StorageRuntimeException() {
 	}
 
-	/***************************************
+	/**
 	 * @see RuntimeException#RuntimeException(Throwable)
 	 */
-	public StorageRuntimeException(StorageException eCause)
-	{
+	public StorageRuntimeException(StorageException eCause) {
 		super(eCause);
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Returns the causing {@link StorageException}.
 	 *
 	 * @see RuntimeException#getCause()
 	 */
 	@Override
-	public synchronized StorageException getCause()
-	{
+	public synchronized StorageException getCause() {
 		return (StorageException) super.getCause();
 	}
 }

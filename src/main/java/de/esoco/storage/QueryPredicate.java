@@ -20,8 +20,7 @@ import de.esoco.lib.expression.Predicate;
 
 import org.obrel.core.RelatedObject;
 
-
-/********************************************************************
+/**
  * A predicate that encapsulates the data that is necessary to perform a query
  * on objects in a storage. Although this class is mainly intended to define
  * storage queries it's evaluate() method can also be applied to objects of the
@@ -29,90 +28,77 @@ import org.obrel.core.RelatedObject;
  *
  * @author eso
  */
-public class QueryPredicate<T> extends RelatedObject implements Predicate<T>
-{
-	//~ Instance fields --------------------------------------------------------
+public class QueryPredicate<T> extends RelatedObject implements Predicate<T> {
 
-	private final Class<T>			   rQueryType;
+	private final Class<T> rQueryType;
+
 	private final Predicate<? super T> rCriteria;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Creates a new instance for a certain class and query criteria.
 	 *
 	 * @param rQueryType The class of the objects to be queried
 	 * @param rCriteria  The query criteria predicate
 	 */
-	public QueryPredicate(Class<T> rQueryType, Predicate<? super T> rCriteria)
-	{
+	public QueryPredicate(Class<T> rQueryType,
+		Predicate<? super T> rCriteria) {
 		this.rQueryType = rQueryType;
-		this.rCriteria  = rCriteria;
+		this.rCriteria = rCriteria;
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean equals(Object rObj)
-	{
-		if (this == rObj)
-		{
+	public boolean equals(Object rObj) {
+		if (this == rObj) {
 			return true;
 		}
 
-		if (rObj == null || getClass() != rObj.getClass())
-		{
+		if (rObj == null || getClass() != rObj.getClass()) {
 			return false;
 		}
 
 		QueryPredicate<?> rOther = (QueryPredicate<?>) rObj;
 
 		return rQueryType == rOther.rQueryType &&
-			   rCriteria.equals(rOther.rCriteria);
+			rCriteria.equals(rOther.rCriteria);
 	}
 
-	/***************************************
+	/**
 	 * Evaluates the argument value with the query criteria of this instance.
 	 *
-	 * @param  rValue The value to evaluate
-	 *
+	 * @param rValue The value to evaluate
 	 * @return The result of the evaluation
 	 */
 	@Override
-	public Boolean evaluate(T rValue)
-	{
+	public Boolean evaluate(T rValue) {
 		return rCriteria.evaluate(rValue);
 	}
 
-	/***************************************
+	/**
 	 * Returns the query criteria predicate for this storage object predicate.
 	 *
 	 * @return The query criteria predicate
 	 */
-	public final Predicate<? super T> getCriteria()
-	{
+	public final Predicate<? super T> getCriteria() {
 		return rCriteria;
 	}
 
-	/***************************************
+	/**
 	 * Returns the datatype that will be queried with this predicate.
 	 *
 	 * @return The query type
 	 */
-	public final Class<T> getQueryType()
-	{
+	public final Class<T> getQueryType() {
 		return rQueryType;
 	}
 
-	/***************************************
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return 31 * (rQueryType.hashCode() + 31 * rCriteria.hashCode());
 	}
 }

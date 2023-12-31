@@ -85,15 +85,12 @@ import static org.obrel.type.MetaTypes.OBJECT_ID_ATTRIBUTE;
 import static org.obrel.type.MetaTypes.PARENT_ATTRIBUTE;
 import static org.obrel.type.MetaTypes.UNIQUE;
 
-
-/********************************************************************
+/**
  * A storage implementation that uses a JDBC connection to store objects.
  *
  * @author eso
  */
-public class JdbcStorage extends Storage
-{
-	//~ Static fields/initializers ---------------------------------------------
+public class JdbcStorage extends Storage {
 
 	private static final String DEFAULT_STRING_DATATYPE = "VARCHAR(1000)";
 
@@ -121,9 +118,13 @@ public class JdbcStorage extends Storage
 
 	private static final Map<Class<?>, String> STANDARD_SQL_DATATYPE_MAP;
 
-	static
-	{
-		Map<Class<?>, String> aSqlDatatypeMap = new HashMap<Class<?>, String>();
+	private static boolean bChildCountsEnabled = true;
+
+	private static int nNextId = 1;
+
+	static {
+		Map<Class<?>, String> aSqlDatatypeMap = new HashMap<Class<?>,
+			String>();
 
 		aSqlDatatypeMap.put(Byte.class, "TINYINT");
 		aSqlDatatypeMap.put(byte.class, "TINYINT");
@@ -159,47 +160,41 @@ public class JdbcStorage extends Storage
 			Collections.unmodifiableMap(aSqlDatatypeMap);
 	}
 
-	private static boolean bChildCountsEnabled = true;
-	private static int     nNextId			   = 1;
-
-	//~ Instance fields --------------------------------------------------------
-
 	private Connection rConnection;
-	private String     sDatabaseName;
-	private String     sFuzzySearchFunction;
-	private char	   cIdentifierQuote;
+
+	private String sDatabaseName;
+
+	private String sFuzzySearchFunction;
+
+	private char cIdentifierQuote;
 
 	private Map<Class<?>, String> aDatatypeMap = STANDARD_SQL_DATATYPE_MAP;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Creates a new instance for a particular JDBC connection URL. The
-	 * database-specific storage parameters must be given as a {@link Relatable}
+	 * database-specific storage parameters must be given as a
+	 * {@link Relatable}
 	 * object that contains the parameters as relations.
 	 *
-	 * @param  rConnection The JDBC connection
-	 * @param  rParams     The database-specific storage parameters
-	 *
+	 * @param rConnection The JDBC connection
+	 * @param rParams     The database-specific storage parameters
 	 * @throws SQLException If creating the connection fails
 	 */
 	@SuppressWarnings("boxing")
-	JdbcStorage(Connection rConnection, Relatable rParams) throws SQLException
-	{
+	JdbcStorage(Connection rConnection, Relatable rParams) throws SQLException {
 		this.rConnection = rConnection;
-		sDatabaseName    = rConnection.getMetaData().getDatabaseProductName();
+		sDatabaseName = rConnection.getMetaData().getDatabaseProductName();
 
 		set(StandardTypes.OBJECT_ID, ObjectId.intId(nNextId++));
 
 		rConnection.setAutoCommit(false);
 
 		sFuzzySearchFunction = rParams.get(SQL_FUZZY_SEARCH_FUNCTION);
-		cIdentifierQuote     = rParams.get(SQL_IDENTITIFIER_QUOTE);
+		cIdentifierQuote = rParams.get(SQL_IDENTITIFIER_QUOTE);
 
 		ObjectRelations.copyRelations(rParams, this, false);
 
-		if (!rParams.get(SQL_DATATYPE_MAP).isEmpty())
-		{
+		if (!rParams.get(SQL_DATATYPE_MAP).isEmpty()) {
 			aDatatypeMap =
 				new HashMap<Class<?>, String>(STANDARD_SQL_DATATYPE_MAP);
 
@@ -208,9 +203,44 @@ public class JdbcStorage extends Storage
 		}
 	}
 
-	//~ Static methods ---------------------------------------------------------
+	/**
+	 * Checks whether the given database contains a certain table.
+	 *
+	 * @param rConnection The database connection to check
+	 * @param sTable      The name of the table
+	 * @return TRUE if the table exists in the database
+	 * @throws StorageException If the metadata query fails
+	 */
+	static boolean containsTable(Connection rConnection, String sTable)
+		throws StorageException {
+		try {
+			DatabaseMetaData rMetaData = rConnection.getMetaData();
 
-	/***************************************
+			ResultSet rTables = rMetaData.getTables(null, null, sTable, null);
+			boolean bExists = rTables.next();
+
+			rTables.close();
+
+			Log.debug(sTable + (bExists ? " exists" : " doesn't exist"));
+
+			return bExists;
+		} catch (SQLException e) {
+			throw new StorageException("Could not access table metadata", e);
+		}
+	}
+
+	/**
+	 * Internal method to format a certain SQL statement.
+	 *
+	 * @param sFormat The format string for the statement
+	 * @param rArgs   The objects to be inserted into the statement
+	 * @return The resulting statement string
+	 */
+	static String formatStatement(String sFormat, Object... rArgs) {
+		return String.format(sFormat, rArgs);
+	}
+
+	/**
 	 * Enables or disables the use of an additional and automatically managed
 	 * child counts field. This can also be done individually by setting a
 	 * static boolean property with the name "DISABLE_SQL_CHILD_COUNT" in an
@@ -218,88 +248,35 @@ public class JdbcStorage extends Storage
 	 *
 	 * @param bEnabled The new child counts enabled
 	 */
-	public static void setChildCountsEnabled(boolean bEnabled)
-	{
+	public static void setChildCountsEnabled(boolean bEnabled) {
 		bChildCountsEnabled = bEnabled;
 	}
 
-	/***************************************
-	 * Checks whether the given database contains a certain table.
-	 *
-	 * @param  rConnection The database connection to check
-	 * @param  sTable      The name of the table
-	 *
-	 * @return TRUE if the table exists in the database
-	 *
-	 * @throws StorageException If the metadata query fails
-	 */
-	static boolean containsTable(Connection rConnection, String sTable)
-		throws StorageException
-	{
-		try
-		{
-			DatabaseMetaData rMetaData = rConnection.getMetaData();
-
-			ResultSet rTables = rMetaData.getTables(null, null, sTable, null);
-			boolean   bExists = rTables.next();
-
-			rTables.close();
-
-			Log.debug(sTable + (bExists ? " exists" : " doesn't exist"));
-
-			return bExists;
-		}
-		catch (SQLException e)
-		{
-			throw new StorageException("Could not access table metadata", e);
-		}
-	}
-
-	/***************************************
-	 * Internal method to format a certain SQL statement.
-	 *
-	 * @param  sFormat The format string for the statement
-	 * @param  rArgs   The objects to be inserted into the statement
-	 *
-	 * @return The resulting statement string
-	 */
-	static String formatStatement(String sFormat, Object... rArgs)
-	{
-		return String.format(sFormat, rArgs);
-	}
-
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * @see Storage#commit()
 	 */
 	@Override
-	public void commit() throws StorageException
-	{
-		try
-		{
+	public void commit() throws StorageException {
+		try {
 			rConnection.commit();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new StorageException("Commit failed", e);
 		}
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#deleteObject(Object)
 	 */
 	@Override
-	public void deleteObject(Object rObject) throws StorageException
-	{
+	public void deleteObject(Object rObject) throws StorageException {
 		@SuppressWarnings("unchecked")
 		StorageMapping<Object, Relatable, ?> rMapping =
 			(StorageMapping<Object, Relatable, ?>) StorageManager.getMapping(
 				rObject.getClass());
 
 		Relatable rIdAttribute = rMapping.getIdAttribute();
-		String    sTable	   = getSqlName(rMapping, true);
-		String    sIdAttr	   = getSqlName(rIdAttribute, true);
+		String sTable = getSqlName(rMapping, true);
+		String sIdAttr = getSqlName(rIdAttribute, true);
 
 		Object rId = rMapping.getAttributeValue(rObject, rIdAttribute);
 
@@ -309,155 +286,129 @@ public class JdbcStorage extends Storage
 		executeUpdate(sSql, null, null, false, false);
 	}
 
-	/***************************************
+	/**
 	 * Executes an arbitrary SQL update statement in this storage's connection.
 	 *
-	 * @param  sSql    The SQL update statement to execute
-	 * @param  rParams Optional parameters to be set on the prepared statement
-	 *
+	 * @param sSql    The SQL update statement to execute
+	 * @param rParams Optional parameters to be set on the prepared statement
 	 * @throws StorageException If the statement execution fails
 	 */
 	public void executeUpdate(String sSql, Object... rParams)
-		throws StorageException
-	{
-		try (PreparedStatement aStatement = rConnection.prepareStatement(sSql))
-		{
+		throws StorageException {
+		try (PreparedStatement aStatement = rConnection.prepareStatement(
+			sSql)) {
 			int nParamIndex = 1;
 
-			for (Object rParam : rParams)
-			{
+			for (Object rParam : rParams) {
 				aStatement.setObject(nParamIndex++, rParam);
 			}
 
 			aStatement.executeUpdate();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new StorageException(e);
 		}
 	}
 
-	/***************************************
+	/**
 	 * Returns the JDBC connection that is used by this instance.
 	 *
 	 * @return The JDBC connection of this instance
 	 */
-	public final Connection getConnection()
-	{
+	public final Connection getConnection() {
 		return rConnection;
 	}
 
-	/***************************************
+	/**
 	 * Returns the fuzzy search function.
 	 *
 	 * @return The fuzzy search function
 	 */
-	public String getFuzzySearchFunction()
-	{
+	public String getFuzzySearchFunction() {
 		return sFuzzySearchFunction;
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#getStorageImplementationName()
 	 */
 	@Override
-	public String getStorageImplementationName()
-	{
+	public String getStorageImplementationName() {
 		return sDatabaseName;
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#isValid()
 	 */
 	@Override
-	public boolean isValid()
-	{
-		try
-		{
+	public boolean isValid() {
+		try {
 			// not yet supported by Postgres: rConnection.isValid(0);
 			return !rConnection.isClosed();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			Log.warn("JdbcStorage.isValid() failed", e);
 
 			return false;
 		}
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#query(QueryPredicate)
 	 */
 	@Override
 	public <T> Query<T> query(QueryPredicate<T> rQueryPredicate)
-		throws StorageException
-	{
+		throws StorageException {
 		return new JdbcQuery<T>(this, rQueryPredicate);
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#rollback()
 	 */
 	@Override
-	public void rollback() throws StorageException
-	{
-		try
-		{
+	public void rollback() throws StorageException {
+		try {
 			rConnection.rollback();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new StorageException("Commit failed", e);
 		}
 	}
 
-	/***************************************
+	/**
 	 * @see Object#toString()
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "JdbcStorage[" + rConnection + "]";
 	}
 
-	/***************************************
+	/**
 	 * @see Storage#close()
 	 */
 	@Override
-	protected void close()
-	{
-		try
-		{
+	protected void close() {
+		try {
 			rConnection.rollback();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			Log.warn("Closing JDBC connection failed", e);
 		}
 
-		try
-		{
+		try {
 			rConnection.close();
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			Log.warn("Closing JDBC connection failed", e);
 		}
 
 		rConnection = null;
 	}
 
-	/***************************************
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	protected boolean hasObjectStorage(StorageMapping<?, ?, ?> rMapping)
-		throws StorageException
-	{
+		throws StorageException {
 		return containsTable(rConnection, getSqlName(rMapping, false));
 	}
 
-	/***************************************
+	/**
 	 * Implemented to create the database tables for the given mapping. If the
 	 * mapping contains child-mappings the child tables will also be created.
 	 * But the tables will only be created if the table for the top-level
@@ -467,42 +418,33 @@ public class JdbcStorage extends Storage
 	 */
 	@Override
 	protected void initObjectStorage(StorageMapping<?, ?, ?> rMapping)
-		throws StorageException
-	{
-		if (!containsTable(rConnection, getSqlName(rMapping, false)))
-		{
+		throws StorageException {
+		if (!containsTable(rConnection, getSqlName(rMapping, false))) {
 			String sCreateStatement = rMapping.get(SQL_CREATE_STATEMENT);
 
-			if (sCreateStatement != null)
-			{
+			if (sCreateStatement != null) {
 				executeUpdate(sCreateStatement, null, null, false, false);
-			}
-			else
-			{
+			} else {
 				createTable(rMapping);
 			}
 
 			for (StorageMapping<?, ?, ?> rChildMapping :
-				 rMapping.getChildMappings())
-			{
+				rMapping.getChildMappings()) {
 				// create child tables, but only if not self-referencing
-				if (rChildMapping != rMapping)
-				{
+				if (rChildMapping != rMapping) {
 					initObjectStorage(rChildMapping);
 				}
 			}
 		}
 	}
 
-	/***************************************
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	protected void removeObjectStorage(StorageMapping<?, ?, ?> rMapping)
-		throws StorageException
-	{
-		if (containsTable(rConnection, getSqlName(rMapping, false)))
-		{
+		throws StorageException {
+		if (containsTable(rConnection, getSqlName(rMapping, false))) {
 			String sDropStatement =
 				String.format(DROP_TABLE_TEMPLATE, getSqlName(rMapping, true));
 
@@ -510,59 +452,56 @@ public class JdbcStorage extends Storage
 		}
 	}
 
-	/***************************************
+	/**
 	 * Stores the hierarchy of a single object in the database. That means that
 	 * the object and all of it's children will be stored. This method will be
-	 * invoked recursively (from {@link #store(Object)}) for each level of child
+	 * invoked recursively (from {@link #store(Object)}) for each level of
+	 * child
 	 * objects.
 	 *
-	 * @param  rObject The object to store
-	 *
+	 * @param rObject The object to store
 	 * @throws Exception If storing the object fails
 	 */
 	@Override
-	protected void storeObject(Object rObject) throws Exception
-	{
+	protected void storeObject(Object rObject) throws Exception {
 		Relatable rRelatable = getRelatable(rObject);
-		boolean   bInsert    = !rRelatable.hasFlag(PERSISTENT);
+		boolean bInsert = !rRelatable.hasFlag(PERSISTENT);
 
 		@SuppressWarnings("unchecked")
-		StorageMapping<Object, Relatable, StorageMapping<?, Relatable, ?>> rMapping =
-			(StorageMapping<Object, Relatable, StorageMapping<?, Relatable, ?>>)
-			StorageManager.getMapping(rObject.getClass());
+		StorageMapping<Object, Relatable, StorageMapping<?, Relatable, ?>>
+			rMapping =
+			(StorageMapping<Object, Relatable,
+				StorageMapping<?, Relatable, ?>>) StorageManager.getMapping(
+				rObject.getClass());
 
 		// stores referenced objects first to make the generated IDs of new
 		// objects available for storeAttributes()
 		storeReferences(rRelatable, rMapping);
 
-		if (needsToBeStored(rRelatable))
-		{
+		if (needsToBeStored(rRelatable)) {
 			storeAttributes(rMapping, rObject, bInsert);
 		}
 
 		for (StorageMapping<?, Relatable, ?> rChildMapping :
-			 rMapping.getChildMappings())
-		{
+			rMapping.getChildMappings()) {
 			store(rMapping.getChildren(rObject, rChildMapping));
 		}
 	}
 
-	/***************************************
+	/**
 	 * Returns the child count column.
 	 *
-	 * @param  rChildMapping The child count column
-	 *
+	 * @param rChildMapping The child count column
 	 * @return The child count column
 	 */
-	String getChildCountColumn(StorageMapping<?, ?, ?> rChildMapping)
-	{
+	String getChildCountColumn(StorageMapping<?, ?, ?> rChildMapping) {
 		String sColumn = rChildMapping.get(SQL_CHILD_COUNT_COLUMN);
 
-		if (sColumn == null)
-		{
+		if (sColumn == null) {
 			sColumn = getSqlName(rChildMapping, true);
 			sColumn =
-				CHILD_COUNT_PREFIX + sColumn.substring(1, sColumn.length() - 1);
+				CHILD_COUNT_PREFIX + sColumn.substring(1,
+					sColumn.length() - 1);
 
 			rChildMapping.set(SQL_CHILD_COUNT_COLUMN, sColumn);
 		}
@@ -570,172 +509,138 @@ public class JdbcStorage extends Storage
 		return sColumn;
 	}
 
-	/***************************************
+	/**
 	 * Returns the SQL-specific name for a particular object. This method first
 	 * looks for a relation of the type {@link JdbcRelationTypes#SQL_NAME} that
 	 * must contain the object's SQL representation.
 	 *
 	 * <p>If no such relation exists it tries to read a relation of the type
-	 * {@link StorageRelationTypes#STORAGE_NAME} instead. If that exists neither
+	 * {@link StorageRelationTypes#STORAGE_NAME} instead. If that exists
+	 * neither
 	 * the name will be generated from the object's toString() representation,
-	 * camel case converted with {@link TextUtil#uppercaseIdentifier(String)} to
+	 * camel case converted with
+	 * {@link TextUtil#uppercaseIdentifier(String)} to
 	 * words separated by underscores and then to lower case. Any name found
 	 * will then be stored in {@link JdbcRelationTypes#SQL_NAME}.</p>
 	 *
-	 * @param  rObject The object to return the SQL name for
-	 * @param  bQuoted TRUE to return the name in quotes for the current
-	 *                 database system, FALSE to only return the SQL name
-	 *
+	 * @param rObject The object to return the SQL name for
+	 * @param bQuoted TRUE to return the name in quotes for the current
+	 *                   database
+	 *                system, FALSE to only return the SQL name
 	 * @return The SQL name for the given object
 	 */
-	String getSqlName(Object rObject, boolean bQuoted)
-	{
+	String getSqlName(Object rObject, boolean bQuoted) {
 		Relatable rRelatable = getRelatable(rObject);
-		String    sName		 = rRelatable.get(SQL_NAME);
+		String sName = rRelatable.get(SQL_NAME);
 
-		if (sName == null)
-		{
+		if (sName == null) {
 			sName = rRelatable.get(STORAGE_NAME);
 
-			if (sName == null)
-			{
-				sName =
-					TextUtil.uppercaseIdentifier(rObject.toString())
-							.toLowerCase();
+			if (sName == null) {
+				sName = TextUtil
+					.uppercaseIdentifier(rObject.toString())
+					.toLowerCase();
 			}
 
 			rRelatable.set(SQL_NAME, sName);
 		}
 
-		if (bQuoted && cIdentifierQuote != 0)
-		{
+		if (bQuoted && cIdentifierQuote != 0) {
 			sName = cIdentifierQuote + sName + cIdentifierQuote;
 		}
 
 		return sName;
 	}
 
-	/***************************************
+	/**
 	 * Checks if the use of a child count field is enabled globally and for the
 	 * given mapping.
 	 *
-	 * @param  rMapping The mapping to check if child counts are enabled
-	 *                  globally
-	 *
+	 * @param rMapping The mapping to check if child counts are enabled
+	 *                 globally
 	 * @return TRUE if child counts are enabled
 	 */
-	final boolean isChildCountsEnabled(StorageMapping<?, ?, ?> rMapping)
-	{
+	final boolean isChildCountsEnabled(StorageMapping<?, ?, ?> rMapping) {
 		return bChildCountsEnabled &&
-			   !rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS);
+			!rMapping.hasFlag(SQL_DISABLE_CHILD_COUNTS);
 	}
 
-	/***************************************
+	/**
 	 * Maps a datatype class to the corresponding SQL datatype string.
 	 *
-	 * @param  rDatatype The datatype class
-	 *
+	 * @param rDatatype The datatype class
 	 * @return The SQL datatype string
 	 */
-	String mapSqlDatatype(Class<?> rDatatype)
-	{
+	String mapSqlDatatype(Class<?> rDatatype) {
 		String sSqlDatatype;
 
-		if (rDatatype.isEnum())
-		{
+		if (rDatatype.isEnum()) {
 			rDatatype = Enum.class;
-		}
-		else if (List.class.isAssignableFrom(rDatatype))
-		{
+		} else if (List.class.isAssignableFrom(rDatatype)) {
 			rDatatype = List.class;
-		}
-		else if (Set.class.isAssignableFrom(rDatatype))
-		{
+		} else if (Set.class.isAssignableFrom(rDatatype)) {
 			rDatatype = Set.class;
-		}
-		else if (Map.class.isAssignableFrom(rDatatype))
-		{
+		} else if (Map.class.isAssignableFrom(rDatatype)) {
 			rDatatype = Map.class;
 		}
 
 		sSqlDatatype = aDatatypeMap.get(rDatatype);
 
-		if (sSqlDatatype == null)
-		{
+		if (sSqlDatatype == null) {
 			sSqlDatatype = DEFAULT_STRING_DATATYPE;
-			Log.warnf(
-				"No datatype mapping for '%s', using '%s' as default",
-				rDatatype,
-				DEFAULT_STRING_DATATYPE);
+			Log.warnf("No datatype mapping for '%s', using '%s' as default",
+				rDatatype, DEFAULT_STRING_DATATYPE);
 		}
 
 		return sSqlDatatype;
 	}
 
-	/***************************************
-	 * Maps a certain value to a datatype that can be stored in a JDBC database.
+	/**
+	 * Maps a certain value to a datatype that can be stored in a JDBC
+	 * database.
 	 * If no generic value mapping the mapping will be delegated to the method
 	 * {@link StorageMapping#mapValue(Relatable, Object)} of the given mapping
 	 * instance.
 	 *
-	 * @param  rMapping   The storage mapping to be used for the mapping
-	 * @param  rAttribute The descriptor of the attribute to map the value for
-	 * @param  rValue     The value to check for a possible conversion
-	 *
+	 * @param rMapping   The storage mapping to be used for the mapping
+	 * @param rAttribute The descriptor of the attribute to map the value for
+	 * @param rValue     The value to check for a possible conversion
 	 * @return The resulting value, converted as necessary
-	 *
 	 * @throws StorageException If the mapping process fails in the storage
 	 *                          mapping
 	 */
 	<T> Object mapValue(StorageMapping<T, Relatable, ?> rMapping,
-						Object							rAttribute,
-						Object							rValue)
-		throws StorageException
-	{
+		Object rAttribute, Object rValue) throws StorageException {
 		Relatable rAttrRelatable = getRelatable(rAttribute);
 
-		if (rValue instanceof Enum ||
-			rValue instanceof GenericEnum ||
-			rValue instanceof Period)
-		{
-			if (rValue instanceof HasOrder)
-			{
+		if (rValue instanceof Enum || rValue instanceof GenericEnum ||
+			rValue instanceof Period) {
+			if (rValue instanceof HasOrder) {
 				rValue =
 					((HasOrder) rValue).ordinal() + "-" + rValue.toString();
-			}
-			else
-			{
+			} else {
 				rValue = rValue.toString();
 			}
-		}
-		else if (rValue instanceof RelationType)
-		{
+		} else if (rValue instanceof RelationType) {
 			RelationType<?> rType = (RelationType<?>) rValue;
 
-			rValue =
-				rType.hasFlag(SQL_OMIT_NAMESPACE) ? rType.getSimpleName()
-												  : rType.getName();
-		}
-		else if (rValue instanceof Class)
-		{
+			rValue = rType.hasFlag(SQL_OMIT_NAMESPACE) ?
+			         rType.getSimpleName() :
+			         rType.getName();
+		} else if (rValue instanceof Class) {
 			rValue = ((Class<?>) rValue).getName();
-		}
-		else
-		{
+		} else {
 			rValue = rMapping.mapValue(rAttrRelatable, rValue);
 		}
 
-		if (rValue != null)
-		{
-			if (rValue.getClass() == Date.class)
-			{
-				// map java.util.Date to java.sql.Timestamp to let JDBC drivers store
+		if (rValue != null) {
+			if (rValue.getClass() == Date.class) {
+				// map java.util.Date to java.sql.Timestamp to let JDBC
+				// drivers store
 				// both time and date
 				rValue = new Timestamp(((Date) rValue).getTime());
-			}
-			else if (rAttrRelatable.get(SQL_DATATYPE) ==
-					 DEFAULT_STRING_DATATYPE)
-			{
+			} else if (rAttrRelatable.get(SQL_DATATYPE) ==
+				DEFAULT_STRING_DATATYPE) {
 				// convert default datatype columns to string values
 				rValue = rValue.toString();
 			}
@@ -744,57 +649,47 @@ public class JdbcStorage extends Storage
 		return rValue;
 	}
 
-	/***************************************
+	/**
 	 * Creates a SQL insert statement to be used as a prepared statement. The
-	 * object parameter is needed to determine whether a auto-generated ID field
+	 * object parameter is needed to determine whether a auto-generated ID
+	 * field
 	 * needs to be included in the statement's column and value placeholder
 	 * lists. If the object contains a valid ID value (i.e. > 0) the field will
 	 * be included in the lists. If not, it will be omitted from the lists so
 	 * that it can be generated automatically by the database.
 	 *
-	 * @param  rMapping     The object to create the statement for
-	 * @param  bGeneratedId TRUE if the statement should be created for an
-	 *                      automatically generated ID value
-	 *
+	 * @param rMapping     The object to create the statement for
+	 * @param bGeneratedId TRUE if the statement should be created for an
+	 *                     automatically generated ID value
 	 * @return The statement string
-	 *
 	 * @throws StorageException If creating the statement fails
 	 */
 	private String createInsertStatement(
-		StorageMapping<Object, Relatable, ?> rMapping,
-		boolean								 bGeneratedId)
-		throws StorageException
-	{
-		int			  nSize		  = rMapping.getAttributes().size();
-		StringBuilder aColumns    = new StringBuilder(nSize * 10);
+		StorageMapping<Object, Relatable, ?> rMapping, boolean bGeneratedId)
+		throws StorageException {
+		int nSize = rMapping.getAttributes().size();
+		StringBuilder aColumns = new StringBuilder(nSize * 10);
 		StringBuilder aParameters = new StringBuilder(nSize * 2);
-		String		  sSql		  = null;
+		String sSql = null;
 
-		for (Relatable rAttr : rMapping.getAttributes())
-		{
+		for (Relatable rAttr : rMapping.getAttributes()) {
 			String sColumn = getSqlName(rAttr, true);
 
-			if (rAttr.hasFlag(AUTOGENERATED) && bGeneratedId)
-			{
+			if (rAttr.hasFlag(AUTOGENERATED) && bGeneratedId) {
 				// omit generated column from statement;
-			}
-			else
-			{
+			} else {
 				aColumns.append(sColumn).append(',');
 				aParameters.append("?,");
 			}
 		}
 
-		if (aColumns.length() == 0)
-		{
+		if (aColumns.length() == 0) {
 			throw new StorageException("No columns to insert: " + rMapping);
 		}
 
-		if (isChildCountsEnabled(rMapping))
-		{
+		if (isChildCountsEnabled(rMapping)) {
 			for (StorageMapping<?, ?, ?> rChildMapping :
-				 rMapping.getChildMappings())
-			{
+				rMapping.getChildMappings()) {
 				aColumns.append(getChildCountColumn(rChildMapping));
 				aColumns.append(',');
 				aParameters.append("?,");
@@ -810,92 +705,76 @@ public class JdbcStorage extends Storage
 		return sSql;
 	}
 
-	/***************************************
+	/**
 	 * Creates a new table in the database of this storage instance if it
 	 * doesn't exist already.
 	 *
-	 * @param  rMapping The storage mapping to create the table for
-	 *
+	 * @param rMapping The storage mapping to create the table for
 	 * @throws StorageException If creating the table fails
 	 */
 	private void createTable(StorageMapping<?, ?, ?> rMapping)
-		throws StorageException
-	{
-		StringBuilder   aColumns	    = new StringBuilder();
+		throws StorageException {
+		StringBuilder aColumns = new StringBuilder();
 		List<Relatable> aReferenceAttrs = new ArrayList<>();
-		Set<Relatable>  aIndexedAttrs   = new LinkedHashSet<>();
-		String		    sTableName	    = getSqlName(rMapping, true);
-		String		    sObjectIdColumn = null;
+		Set<Relatable> aIndexedAttrs = new LinkedHashSet<>();
+		String sTableName = getSqlName(rMapping, true);
+		String sObjectIdColumn = null;
 
-		for (Relatable rAttr : rMapping.getAttributes())
-		{
+		for (Relatable rAttr : rMapping.getAttributes()) {
 			String sSqlName = getSqlName(rAttr, true);
 
 			aColumns.append(sSqlName);
 			aColumns.append(' ');
 			aColumns.append(mapColumnDatatype(rMapping, rAttr));
 
-			if (rAttr.hasFlag(UNIQUE))
-			{
+			if (rAttr.hasFlag(UNIQUE)) {
 				aColumns.append(" UNIQUE");
 			}
 
-			if (rAttr.hasFlag(MANDATORY))
-			{
+			if (rAttr.hasFlag(MANDATORY)) {
 				aColumns.append(" NOT NULL");
 			}
 
-			if (rAttr.hasFlag(INDEXED))
-			{
+			if (rAttr.hasFlag(INDEXED)) {
 				aIndexedAttrs.add(rAttr);
 			}
 
 			aColumns.append(',');
 
-			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE))
-			{
+			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE)) {
 				sObjectIdColumn = sSqlName;
-			}
-			else if (rAttr.hasFlag(PARENT_ATTRIBUTE) ||
-					 rAttr.hasFlag(REFERENCE_ATTRIBUTE))
-			{
+			} else if (rAttr.hasFlag(PARENT_ATTRIBUTE) ||
+				rAttr.hasFlag(REFERENCE_ATTRIBUTE)) {
 				aReferenceAttrs.add(rAttr);
 			}
 		}
 
-		if (isChildCountsEnabled(rMapping))
-		{
+		if (isChildCountsEnabled(rMapping)) {
 			for (StorageMapping<?, ?, ?> rChildMapping :
-				 rMapping.getChildMappings())
-			{
+				rMapping.getChildMappings()) {
 				aColumns.append(getChildCountColumn(rChildMapping));
 				aColumns.append(" INTEGER,");
 			}
 		}
 
-		if (sObjectIdColumn != null)
-		{
+		if (sObjectIdColumn != null) {
 			aColumns.append(
 				formatStatement(PRIMARY_KEY_TEMPLATE, sObjectIdColumn));
 		}
 
-		for (Relatable rReferenceAttr : aReferenceAttrs)
-		{
+		for (Relatable rReferenceAttr : aReferenceAttrs) {
 			StorageMapping<?, ?, ?> rTargetMapping =
 				rReferenceAttr.get(STORAGE_MAPPING);
 
 			// exclude parent attributes to prevent recursion
-			if (!rReferenceAttr.hasFlag(PARENT_ATTRIBUTE))
-			{
+			if (!rReferenceAttr.hasFlag(PARENT_ATTRIBUTE)) {
 				initObjectStorage(rTargetMapping);
 			}
 
-			aColumns.append(
-				formatStatement(
-					FOREIGN_KEY_TEMPLATE,
-					getSqlName(rReferenceAttr, true),
-					getSqlName(rTargetMapping, true),
-					getSqlName(rTargetMapping.getIdAttribute(), true)));
+			aColumns.append(formatStatement(FOREIGN_KEY_TEMPLATE,
+				getSqlName(rReferenceAttr, true),
+				getSqlName(rTargetMapping, true),
+				getSqlName(rTargetMapping.getIdAttribute(), true)));
 		}
 
 		aColumns.setLength(aColumns.length() - 1);
@@ -907,17 +786,12 @@ public class JdbcStorage extends Storage
 
 		executeUpdate(sSql, null, null, false, false);
 
-		if (aIndexedAttrs.size() > 0)
-		{
+		if (aIndexedAttrs.size() > 0) {
 			String sTable = getSqlName(rMapping, false);
 
-			for (Relatable rAttr : aIndexedAttrs)
-			{
-				sSql =
-					formatStatement(
-						INDEX_TEMPLATE,
-						sTable,
-						getSqlName(rAttr, false));
+			for (Relatable rAttr : aIndexedAttrs) {
+				sSql = formatStatement(INDEX_TEMPLATE, sTable,
+					getSqlName(rAttr, false));
 
 				Log.debug(sSql);
 
@@ -926,48 +800,38 @@ public class JdbcStorage extends Storage
 		}
 	}
 
-	/***************************************
+	/**
 	 * Creates a SQL update statement to be used as a prepared statement.
 	 *
-	 * @param  rMapping rObject The object to create the statement for
-	 *
+	 * @param rMapping rObject The object to create the statement for
 	 * @return The statement string
-	 *
 	 * @throws StorageException If creating the statement fails
 	 */
 	private String createUpdateStatement(StorageMapping<?, ?, ?> rMapping)
-		throws StorageException
-	{
-		int			  nSize     = rMapping.getAttributes().size();
-		StringBuilder aColumns  = new StringBuilder(nSize * 10);
+		throws StorageException {
+		int nSize = rMapping.getAttributes().size();
+		StringBuilder aColumns = new StringBuilder(nSize * 10);
 		StringBuilder aIdentity = new StringBuilder();
 
-		for (Relatable rAttr : rMapping.getAttributes())
-		{
+		for (Relatable rAttr : rMapping.getAttributes()) {
 			String sColumn = getSqlName(rAttr, true);
 
-			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE))
-			{
+			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE)) {
 				aIdentity.append(sColumn).append("=?");
-			}
-			else // if (!rAttr.hasFlag(PARENT_ATTRIBUTE))
+			} else // if (!rAttr.hasFlag(PARENT_ATTRIBUTE))
 			{
 				aColumns.append(sColumn).append("=?,");
 			}
 		}
 
-		if (aColumns.length() == 0 || aIdentity.length() == 0)
-		{
+		if (aColumns.length() == 0 || aIdentity.length() == 0) {
 			throw new StorageException(
-				"No columns or primary key for update: " +
-				rMapping);
+				"No columns or primary key for update: " + rMapping);
 		}
 
-		if (isChildCountsEnabled(rMapping))
-		{
+		if (isChildCountsEnabled(rMapping)) {
 			for (StorageMapping<?, ?, ?> rChildMapping :
-				 rMapping.getChildMappings())
-			{
+				rMapping.getChildMappings()) {
 				aColumns.append(getChildCountColumn(rChildMapping));
 				aColumns.append("=?,");
 			}
@@ -975,73 +839,50 @@ public class JdbcStorage extends Storage
 
 		aColumns.setLength(aColumns.length() - 1);
 
-		return formatStatement(
-			UPDATE_TEMPLATE,
-			getSqlName(rMapping, true),
-			aColumns,
-			aIdentity);
+		return formatStatement(UPDATE_TEMPLATE, getSqlName(rMapping, true),
+			aColumns, aIdentity);
 	}
 
-	/***************************************
+	/**
 	 * Internal method to prepare and execute a SQL statement for updating or
 	 * inserting data. If the statement shall only be executed without
 	 * parameters the storage mapping and object parameter must be NULL and the
 	 * boolean flags must be FALSE .
 	 *
-	 * @param  sSql         The SQL statement to be executed
-	 * @param  rMapping     The storage mapping if the statement needs
-	 *                      parameters to be set or NULL for other statements
-	 * @param  rObject      The object the statement is executed for or NULL for
-	 *                      none
-	 * @param  bInsert      TRUE for an insert statement, FALSE for an update
-	 *                      statement
-	 * @param  bGeneratedId TRUE if the statement will produce an automatically
-	 *                      generated ID value
-	 *
+	 * @param sSql         The SQL statement to be executed
+	 * @param rMapping     The storage mapping if the statement needs
+	 *                        parameters
+	 *                     to be set or NULL for other statements
+	 * @param rObject      The object the statement is executed for or NULL for
+	 *                     none
+	 * @param bInsert      TRUE for an insert statement, FALSE for an update
+	 *                     statement
+	 * @param bGeneratedId TRUE if the statement will produce an automatically
+	 *                     generated ID value
 	 * @throws StorageException If the execution fails
 	 */
-	private void executeUpdate(
-		String								 sSql,
-		StorageMapping<Object, Relatable, ?> rMapping,
-		Object								 rObject,
-		boolean								 bInsert,
-		boolean								 bGeneratedId)
-		throws StorageException
-	{
-		try (PreparedStatement aStatement = prepareStatement(sSql, bGeneratedId))
-		{
-			if (rMapping != null)
-			{
-				setStatementParameters(
-					aStatement,
-					rMapping,
-					rObject,
-					bInsert,
+	private void executeUpdate(String sSql,
+		StorageMapping<Object, Relatable, ?> rMapping, Object rObject,
+		boolean bInsert, boolean bGeneratedId) throws StorageException {
+		try (PreparedStatement aStatement = prepareStatement(sSql,
+			bGeneratedId)) {
+			if (rMapping != null) {
+				setStatementParameters(aStatement, rMapping, rObject, bInsert,
 					bGeneratedId);
 			}
 
 			aStatement.executeUpdate();
 
-			if (bGeneratedId)
-			{
+			if (bGeneratedId) {
 				setGeneratedKey(aStatement, rMapping, rObject);
 			}
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			String sMessage;
 
-			if (rObject != null)
-			{
-				sMessage =
-					String.format(
-						"SQL %s failed for %s (%s",
-						bInsert ? "insert" : "update",
-						rObject,
-						sSql);
-			}
-			else
-			{
+			if (rObject != null) {
+				sMessage = String.format("SQL %s failed for %s (%s",
+					bInsert ? "insert" : "update", rObject, sSql);
+			} else {
 				sMessage = String.format("SQL statement failed: " + sSql);
 			}
 
@@ -1050,108 +891,77 @@ public class JdbcStorage extends Storage
 		}
 	}
 
-	/***************************************
+	/**
 	 * Returns the auto id datatype from either the given storage mapping if it
 	 * exits there or for this storage.
 	 *
-	 * @param  rMapping        The storage mapping to query first
-	 * @param  rAutoIdAttrType The relation type to query the auto ID attribute
-	 *                         with
-	 *
+	 * @param rMapping        The storage mapping to query first
+	 * @param rAutoIdAttrType The relation type to query the auto ID attribute
+	 *                        with
 	 * @return The auto ID datatype string
 	 */
-	private String getAutoIdDatatype(
-		StorageMapping<?, ?, ?> rMapping,
-		RelationType<String>    rAutoIdAttrType)
-	{
+	private String getAutoIdDatatype(StorageMapping<?, ?, ?> rMapping,
+		RelationType<String> rAutoIdAttrType) {
 		String sSqlDatatype;
 
-		if (rMapping.hasRelation(rAutoIdAttrType))
-		{
+		if (rMapping.hasRelation(rAutoIdAttrType)) {
 			sSqlDatatype = rMapping.get(rAutoIdAttrType);
-		}
-		else
-		{
+		} else {
 			sSqlDatatype = get(rAutoIdAttrType);
 		}
 
 		return sSqlDatatype;
 	}
 
-	/***************************************
+	/**
 	 * Maps an entity attribute definition to the corresponding SQL datatype
 	 * string.
 	 *
-	 * @param  rMapping    The parent mapping of the given attribute
-	 * @param  rColumnAttr The attribute for the column datatype to be mapped
-	 *
+	 * @param rMapping    The parent mapping of the given attribute
+	 * @param rColumnAttr The attribute for the column datatype to be mapped
 	 * @return The corresponding SQL datatype string
-	 *
 	 * @throws StorageException If no matching SQL datatype can be found
 	 */
-	private String mapColumnDatatype(
-		StorageMapping<?, ?, ?> rMapping,
-		Relatable				rColumnAttr) throws StorageException
-	{
+	private String mapColumnDatatype(StorageMapping<?, ?, ?> rMapping,
+		Relatable rColumnAttr) throws StorageException {
 		String sSqlDatatype = null;
 
-		if (rColumnAttr.hasRelation(SQL_DATATYPE))
-		{
+		if (rColumnAttr.hasRelation(SQL_DATATYPE)) {
 			sSqlDatatype = rColumnAttr.get(SQL_DATATYPE);
-		}
-		else
-		{
-			if (rColumnAttr.hasRelation(STORAGE_DATATYPE))
-			{
+		} else {
+			if (rColumnAttr.hasRelation(STORAGE_DATATYPE)) {
 				Class<?> rDatatype = rColumnAttr.get(STORAGE_DATATYPE);
 
-				if (rColumnAttr.hasFlag(AUTOGENERATED))
-				{
-					if (rDatatype == Long.class)
-					{
-						sSqlDatatype =
-							getAutoIdDatatype(
-								rMapping,
-								SQL_LONG_AUTO_IDENTITY_DATATYPE);
+				if (rColumnAttr.hasFlag(AUTOGENERATED)) {
+					if (rDatatype == Long.class) {
+						sSqlDatatype = getAutoIdDatatype(rMapping,
+							SQL_LONG_AUTO_IDENTITY_DATATYPE);
+					} else {
+						sSqlDatatype = getAutoIdDatatype(rMapping,
+							SQL_AUTO_IDENTITY_DATATYPE);
 					}
-					else
-					{
-						sSqlDatatype =
-							getAutoIdDatatype(
-								rMapping,
-								SQL_AUTO_IDENTITY_DATATYPE);
-					}
-				}
-				else
-				{
+				} else {
 					sSqlDatatype = mapSqlDatatype(rDatatype);
 
-					if (sSqlDatatype.indexOf('%') >= 0)
-					{
-						sSqlDatatype =
-							String.format(
-								sSqlDatatype,
-								rColumnAttr.get(STORAGE_LENGTH));
+					if (sSqlDatatype.indexOf('%') >= 0) {
+						sSqlDatatype = String.format(sSqlDatatype,
+							rColumnAttr.get(STORAGE_LENGTH));
 					}
 				}
 			}
 
-			if (sSqlDatatype != null)
-			{
+			if (sSqlDatatype != null) {
 				rColumnAttr.set(SQL_DATATYPE, sSqlDatatype);
-			}
-			else
-			{
+			} else {
 				throw new StorageException(
-					"No SQL datatype mapping for: " +
-					rColumnAttr);
+					"No SQL datatype mapping for: " + rColumnAttr);
 			}
 		}
 
 		return sSqlDatatype;
 	}
 
-	/***************************************
+	/**
 	 * Checks the modification flag of the given relatable representation of an
 	 * object to be persisted. This will not read (and therefore create) the
 	 * {@link MetaTypes#MODIFIED} relation if it doesn't exist. If the relation
@@ -1159,48 +969,40 @@ public class JdbcStorage extends Storage
 	 * tracking. In that case the object must always be stored and this method
 	 * returns TRUE.
 	 *
-	 * @param  rRelatable The relatable object to check
-	 *
+	 * @param rRelatable The relatable object to check
 	 * @return TRUE if the object has modified attributes
 	 */
-	private boolean needsToBeStored(Relatable rRelatable)
-	{
+	private boolean needsToBeStored(Relatable rRelatable) {
 		return !rRelatable.hasRelation(MODIFIED) ||
-			   rRelatable.hasFlag(MODIFIED);
+			rRelatable.hasFlag(MODIFIED);
 	}
 
-	/***************************************
+	/**
 	 * Internal method to return a new prepared statement that has been created
 	 * from the given SQL statement. Any occurring SQLException will be
 	 * converted into a {@link StorageException}.
 	 *
-	 * @param  sSQL        The SQL statement to prepare
-	 * @param  bReturnKeys TRUE if the statement will return auto-generated keys
-	 *
+	 * @param sSQL        The SQL statement to prepare
+	 * @param bReturnKeys TRUE if the statement will return auto-generated keys
 	 * @return The prepared statement
-	 *
 	 * @throws StorageException If preparing the statement fails
 	 */
-	private PreparedStatement prepareStatement(String  sSQL,
-											   boolean bReturnKeys)
-		throws StorageException
-	{
-		try
-		{
-			int nReturnKeys =
-				bReturnKeys ? Statement.RETURN_GENERATED_KEYS
-							: Statement.NO_GENERATED_KEYS;
+	private PreparedStatement prepareStatement(String sSQL,
+		boolean bReturnKeys)
+		throws StorageException {
+		try {
+			int nReturnKeys = bReturnKeys ?
+			                  Statement.RETURN_GENERATED_KEYS :
+			                  Statement.NO_GENERATED_KEYS;
 
 			return rConnection.prepareStatement(sSQL, nReturnKeys);
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			Log.error("Preparing statement failed: " + sSQL, e);
 			throw new StorageException("Preparing statement failed", e);
 		}
 	}
 
-	/***************************************
+	/**
 	 * This method sets a database-generated primary key value on the given
 	 * object. This method must be invoked after the object has been inserted
 	 * into the database with the given statement. It will only have an effect
@@ -1208,122 +1010,96 @@ public class JdbcStorage extends Storage
 	 * method {@link Statement#getGeneratedKeys()}. If the key couldn't be
 	 * queried it will be set to -1.
 	 *
-	 * @param  rStatement The statement to query the generated key from
-	 * @param  rMapping   The storage mapping for the given object
-	 * @param  rObject    The object to set the generated key on
-	 *
+	 * @param rStatement The statement to query the generated key from
+	 * @param rMapping   The storage mapping for the given object
+	 * @param rObject    The object to set the generated key on
 	 * @return The generated key value
-	 *
 	 * @throws StorageException If querying the generated key fails
 	 */
 	@SuppressWarnings("boxing")
-	private Object setGeneratedKey(
-		Statement							 rStatement,
-		StorageMapping<Object, Relatable, ?> rMapping,
-		Object								 rObject) throws StorageException
-	{
-		Relatable rIdAttribute  = rMapping.getIdAttribute();
-		long	  nGeneratedKey = -1;
+	private Object setGeneratedKey(Statement rStatement,
+		StorageMapping<Object, Relatable, ?> rMapping, Object rObject)
+		throws StorageException {
+		Relatable rIdAttribute = rMapping.getIdAttribute();
+		long nGeneratedKey = -1;
 
-		try
-		{
+		try {
 			ResultSet rKeyResult = null;
 
-			if (rIdAttribute != null)
-			{
+			if (rIdAttribute != null) {
 				DatabaseMetaData rMetaData = rConnection.getMetaData();
 
-				if (rMetaData.supportsGetGeneratedKeys())
-				{
+				if (rMetaData.supportsGetGeneratedKeys()) {
 					rKeyResult = rStatement.getGeneratedKeys();
 				}
 
-				if (rKeyResult != null && rKeyResult.next())
-				{
+				if (rKeyResult != null && rKeyResult.next()) {
 					nGeneratedKey = rKeyResult.getLong(1);
 				}
 
-				if (rIdAttribute.get(STORAGE_DATATYPE) == Long.class)
-				{
-					rMapping.setAttributeValue(
-						rObject,
-						rIdAttribute,
+				if (rIdAttribute.get(STORAGE_DATATYPE) == Long.class) {
+					rMapping.setAttributeValue(rObject, rIdAttribute,
 						nGeneratedKey);
-				}
-				else
-				{
-					rMapping.setAttributeValue(
-						rObject,
-						rIdAttribute,
+				} else {
+					rMapping.setAttributeValue(rObject, rIdAttribute,
 						(int) nGeneratedKey);
 				}
 
 				Log.debugf("Generated key %d for %s", nGeneratedKey, rObject);
 			}
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new StorageException("Retrieving generated key failed", e);
 		}
 
 		return nGeneratedKey;
 	}
 
-	/***************************************
+	/**
 	 * Sets the parameters on a prepared statement from a certain object. The
 	 * boolean parameters define which parameters shall be set, the object's
 	 * attributes and/or it's identity attributes. If both parameters are TRUE
 	 * the attributes will be set first.
 	 *
-	 * @param  rStatement The prepared statement
-	 * @param  rMapping   The storage mapping for the given object
-	 * @param  rObject    The object to read the parameter values from
-	 * @param  bInsert    FALSE if the statement is for an update and therefore
-	 *                    needs the object's identity attributes to be set
-	 * @param  bIgnoreId  TRUE if the object's ID field shall be ignored in
-	 *                    insert statements (typically because it is
-	 *                    automatically generated)
-	 *
+	 * @param rStatement The prepared statement
+	 * @param rMapping   The storage mapping for the given object
+	 * @param rObject    The object to read the parameter values from
+	 * @param bInsert    FALSE if the statement is for an update and therefore
+	 *                   needs the object's identity attributes to be set
+	 * @param bIgnoreId  TRUE if the object's ID field shall be ignored in
+	 *                   insert statements (typically because it is
+	 *                   automatically generated)
 	 * @throws SQLException     If setting a parameter fails
 	 * @throws StorageException If no identity attribute could be found in
 	 *                          update mode
 	 */
-	private <C extends StorageMapping<?, Relatable, ?>> void
-	setStatementParameters(PreparedStatement					rStatement,
-						   StorageMapping<Object, Relatable, C> rMapping,
-						   Object								rObject,
-						   boolean								bInsert,
-						   boolean								bIgnoreId)
-		throws SQLException, StorageException
-	{
-		List<Object> aParams	    = new ArrayList<Object>();
-		Object		 rIdentityValue = null;
-		int			 nParamIndex    = 1;
+	private <C extends StorageMapping<?, Relatable, ?>> void setStatementParameters(
+		PreparedStatement rStatement,
+		StorageMapping<Object, Relatable, C> rMapping, Object rObject,
+		boolean bInsert, boolean bIgnoreId)
+		throws SQLException, StorageException {
+		List<Object> aParams = new ArrayList<Object>();
+		Object rIdentityValue = null;
+		int nParamIndex = 1;
 
-		for (Relatable rAttr : rMapping.getAttributes())
-		{
-			Object  rParam    = rMapping.getAttributeValue(rObject, rAttr);
+		for (Relatable rAttr : rMapping.getAttributes()) {
+			Object rParam = rMapping.getAttributeValue(rObject, rAttr);
 			boolean bSetParam = true;
 
 			rParam = mapValue(rMapping, rAttr, rParam);
 
-			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE))
-			{
+			if (rAttr.hasFlag(OBJECT_ID_ATTRIBUTE)) {
 				rIdentityValue = rParam;
-				bSetParam	   = bInsert && !bIgnoreId;
+				bSetParam = bInsert && !bIgnoreId;
 			}
 
-			if (bSetParam)
-			{
+			if (bSetParam) {
 				rStatement.setObject(nParamIndex++, rParam);
 				aParams.add(rParam);
 			}
 		}
 
-		if (isChildCountsEnabled(rMapping))
-		{
-			for (C rChildMapping : rMapping.getChildMappings())
-			{
+		if (isChildCountsEnabled(rMapping)) {
+			for (C rChildMapping : rMapping.getChildMappings()) {
 				int nChildren =
 					rMapping.getChildren(rObject, rChildMapping).size();
 
@@ -1334,57 +1110,44 @@ public class JdbcStorage extends Storage
 			}
 		}
 
-		if (!bInsert)
-		{
-			if (rIdentityValue != null)
-			{
+		if (!bInsert) {
+			if (rIdentityValue != null) {
 				rStatement.setObject(nParamIndex++, rIdentityValue);
 				aParams.add(rIdentityValue);
-			}
-			else
-			{
+			} else {
 				throw new StorageException(
-					"No identity attribute defined in " +
-					rMapping);
+					"No identity attribute defined in " + rMapping);
 			}
 		}
 
 		Log.debugf("StatementParams: %s", aParams);
 	}
 
-	/***************************************
+	/**
 	 * Internal method to create the insert or update statement for the
 	 * attributes of an object.
 	 *
-	 * @param  rMapping The storage mapping of the object
-	 * @param  rObject  The object to store the attributes of
-	 * @param  bInsert  TRUE for insert and FALSE for update
-	 *
+	 * @param rMapping The storage mapping of the object
+	 * @param rObject  The object to store the attributes of
+	 * @param bInsert  TRUE for insert and FALSE for update
 	 * @throws StorageException If executing the JDBC statement fails
 	 */
 	private void storeAttributes(StorageMapping<Object, Relatable, ?> rMapping,
-								 Object								  rObject,
-								 boolean							  bInsert)
-		throws StorageException
-	{
+		Object rObject, boolean bInsert) throws StorageException {
 		Relatable rIdAttribute = rMapping.getIdAttribute();
-		boolean   bGeneratedId = false;
-		String    sSql;
+		boolean bGeneratedId = false;
+		String sSql;
 
-		if (bInsert)
-		{
-			if (rIdAttribute.hasFlag(AUTOGENERATED))
-			{
+		if (bInsert) {
+			if (rIdAttribute.hasFlag(AUTOGENERATED)) {
 				Object rId = rMapping.getAttributeValue(rObject, rIdAttribute);
 
-				bGeneratedId = (rId == null ||
-								((Number) rId).longValue() <= 0);
+				bGeneratedId =
+					(rId == null || ((Number) rId).longValue() <= 0);
 			}
 
 			sSql = createInsertStatement(rMapping, bGeneratedId);
-		}
-		else
-		{
+		} else {
 			sSql = createUpdateStatement(rMapping);
 		}
 
@@ -1392,41 +1155,33 @@ public class JdbcStorage extends Storage
 		executeUpdate(sSql, rMapping, rObject, bInsert, bGeneratedId);
 	}
 
-	/***************************************
-	 * Stores the objects that are referenced by the argument object if they are
+	/**
+	 * Stores the objects that are referenced by the argument object if they
+	 * are
 	 * modified and not part of the object's hierarchy.
 	 *
-	 * @param  rObject  The object to store the references of
-	 * @param  rMapping The storage mapping of the object
-	 *
+	 * @param rObject  The object to store the references of
+	 * @param rMapping The storage mapping of the object
 	 * @throws StorageException If storing a reference fails
 	 */
-	private void storeReferences(
-		Relatable							 rObject,
-		StorageMapping<Object, Relatable, ?> rMapping) throws StorageException
-	{
-		for (Relatable rAttr : rMapping.getAttributes())
-		{
-			if (!rMapping.isHierarchyAttribute(rAttr))
-			{
+	private void storeReferences(Relatable rObject,
+		StorageMapping<Object, Relatable, ?> rMapping) throws StorageException {
+		for (Relatable rAttr : rMapping.getAttributes()) {
+			if (!rMapping.isHierarchyAttribute(rAttr)) {
 				@SuppressWarnings("unchecked")
 				StorageMapping<Object, ?, ?> rReferenceMapping =
 					(StorageMapping<Object, ?, ?>) rAttr.get(STORAGE_MAPPING);
 
-				if (rReferenceMapping != null)
-				{
+				if (rReferenceMapping != null) {
 					Object rReference =
 						rMapping.getAttributeValue(rObject, rAttr);
 
-					if (rReference != null)
-					{
+					if (rReference != null) {
 						Relatable rRefRelatable = getRelatable(rReference);
 
 						if (!rRefRelatable.hasRelation(STORING) &&
-							needsToBeStored(rRefRelatable))
-						{
-							rReferenceMapping.storeReference(
-								rObject,
+							needsToBeStored(rRefRelatable)) {
+							rReferenceMapping.storeReference(rObject,
 								rReference);
 						}
 					}

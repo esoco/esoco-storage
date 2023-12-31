@@ -25,53 +25,40 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-
-/********************************************************************
+/**
  * A JDBC storage definition that uses a {@link DataSource} to create database
  * connections.
  *
  * @author eso
  */
-class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition
-{
-	//~ Static fields/initializers ---------------------------------------------
+class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Instance fields --------------------------------------------------------
-
 	private final DataSource rDataSource;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Creates a new instance with a particular JDBC data source.
 	 *
 	 * @param rDataSource The JDBC data source
 	 */
-	JdbcDataSourceStorageDefinition(DataSource rDataSource)
-	{
+	JdbcDataSourceStorageDefinition(DataSource rDataSource) {
 		this.rDataSource = rDataSource;
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Two JDBC storage definitions are considered equal if their URLs, user
 	 * names, and identity datatypes are equal.
 	 *
 	 * @see StorageDefinition#equals(Object)
 	 */
 	@Override
-	public boolean equals(Object rObject)
-	{
-		if (this == rObject)
-		{
+	public boolean equals(Object rObject) {
+		if (this == rObject) {
 			return true;
 		}
 
-		if (rObject == null || getClass() != rObject.getClass())
-		{
+		if (rObject == null || getClass() != rObject.getClass()) {
 			return false;
 		}
 
@@ -81,35 +68,29 @@ class JdbcDataSourceStorageDefinition extends JdbcStorageDefinition
 		return rDataSource.equals(rOther.rDataSource);
 	}
 
-	/***************************************
+	/**
 	 * @see StorageDefinition#hashCode()
 	 */
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return 37 * rDataSource.hashCode();
 	}
 
-	/***************************************
+	/**
 	 * Creates a new JDBC-specific storage instance from this definition.
 	 *
 	 * @see StorageDefinition#createStorage()
 	 */
 	@Override
-	protected Storage createStorage() throws StorageException
-	{
-		try
-		{
+	protected Storage createStorage() throws StorageException {
+		try {
 			Connection rConnection = rDataSource.getConnection();
 
-			JdbcStorage aStorage =
-				new JdbcStorage(rConnection,
-								getDatabaseParameters(rConnection));
+			JdbcStorage aStorage = new JdbcStorage(rConnection,
+				getDatabaseParameters(rConnection));
 
 			return aStorage;
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new StorageException("Storage creation failed", e);
 		}
 	}

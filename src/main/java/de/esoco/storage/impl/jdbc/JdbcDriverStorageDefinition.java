@@ -26,66 +26,52 @@ import java.sql.SQLException;
 
 import java.util.Properties;
 
-
-/********************************************************************
+/**
  * A JDBC storage definition that uses the {@link DriverManager} to create
  * database connections.
  *
  * @author eso
  */
-class JdbcDriverStorageDefinition extends JdbcStorageDefinition
-{
-	//~ Static fields/initializers ---------------------------------------------
+class JdbcDriverStorageDefinition extends JdbcStorageDefinition {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Instance fields --------------------------------------------------------
+	private final String sConnectURL;
 
-	private final String     sConnectURL;
 	private final Properties aConnectionProperties = new Properties();
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Creates a new instance with a certain JDBC connection URL and connection
 	 * properties.
 	 *
 	 * @param sConnectURL The URL for the JDBC connection
 	 * @param rProperties The connection properties
 	 */
-	JdbcDriverStorageDefinition(String sConnectURL, Properties rProperties)
-	{
-		if (sConnectURL == null)
-		{
+	JdbcDriverStorageDefinition(String sConnectURL, Properties rProperties) {
+		if (sConnectURL == null) {
 			throw new IllegalArgumentException("URL");
 		}
 
 		this.sConnectURL = sConnectURL;
 
-		if (rProperties != null)
-		{
+		if (rProperties != null) {
 			aConnectionProperties.putAll(rProperties);
 		}
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Two JDBC storage definitions are considered equal if their URLs, user
 	 * names, and identity datatypes are equal.
 	 *
 	 * @see StorageDefinition#equals(Object)
 	 */
 	@Override
-	public boolean equals(Object rObject)
-	{
-		if (this == rObject)
-		{
+	public boolean equals(Object rObject) {
+		if (this == rObject) {
 			return true;
 		}
 
-		if (rObject == null || getClass() != rObject.getClass())
-		{
+		if (rObject == null || getClass() != rObject.getClass()) {
 			return false;
 		}
 
@@ -93,45 +79,40 @@ class JdbcDriverStorageDefinition extends JdbcStorageDefinition
 			(JdbcDriverStorageDefinition) rObject;
 
 		return sConnectURL.equals(rOther.sConnectURL) &&
-			   aConnectionProperties.equals(rOther.aConnectionProperties);
+			aConnectionProperties.equals(rOther.aConnectionProperties);
 	}
 
-	/***************************************
+	/**
 	 * @see StorageDefinition#hashCode()
 	 */
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return sConnectURL.hashCode() * 37 + aConnectionProperties.hashCode();
 	}
 
-	/***************************************
+	/**
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "JdbcDriverStorageDefinition [sConnectURL=" + sConnectURL + "]";
 	}
 
-	/***************************************
+	/**
 	 * Creates a new JDBC-specific storage instance from this definition.
 	 *
 	 * @see StorageDefinition#createStorage()
 	 */
 	@Override
-	protected Storage createStorage() throws StorageException
-	{
-		try
-		{
+	protected Storage createStorage() throws StorageException {
+		try {
 			Connection aConnection =
-				DriverManager.getConnection(sConnectURL, aConnectionProperties);
+				DriverManager.getConnection(sConnectURL,
+					aConnectionProperties);
 
 			return new JdbcStorage(aConnection,
-								   getDatabaseParameters(aConnection));
-		}
-		catch (SQLException e)
-		{
+				getDatabaseParameters(aConnection));
+		} catch (SQLException e) {
 			throw new StorageException("Storage creation failed", e);
 		}
 	}

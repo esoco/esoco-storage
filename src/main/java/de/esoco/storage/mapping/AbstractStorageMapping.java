@@ -46,21 +46,19 @@ import static org.obrel.type.MetaTypes.KEY_DATATYPE;
 import static org.obrel.type.MetaTypes.ORDERED;
 import static org.obrel.type.MetaTypes.VALUE_DATATYPE;
 
-
-/********************************************************************
+/**
  * An abstract base class for storage mapping implementations. Contains some
  * generic helper methods for the implementation of mappings.
  *
  * @author eso
  */
 public abstract class AbstractStorageMapping<T, A extends Relatable,
-											 C extends StorageMapping<?, A, ?>>
-	extends RelatedObject implements StorageMapping<T, A, C>
-{
-	//~ Methods ----------------------------------------------------------------
+	C extends StorageMapping<?, A, ?>>
+	extends RelatedObject implements StorageMapping<T, A, C> {
 
-	/***************************************
-	 * Implemented to perform value conversions to some standard datatypes. This
+	/**
+	 * Implemented to perform value conversions to some standard datatypes.
+	 * This
 	 * especially includes string parsing and primitive datatype wrapping. The
 	 * supported string conversions are
 	 *
@@ -83,34 +81,23 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 */
 	@Override
 	public Object checkAttributeValue(A rAttribute, Object rValue)
-		throws StorageException
-	{
-		if (rValue != null)
-		{
+		throws StorageException {
+		if (rValue != null) {
 			Class<?> rDatatype = getAttributeDatatype(rAttribute);
 
-			if (rDatatype != String.class)
-			{
-				if (rDatatype.isPrimitive())
-				{
+			if (rDatatype != String.class) {
+				if (rDatatype.isPrimitive()) {
 					rDatatype = ReflectUtil.getWrapperType(rDatatype);
 				}
 
-				if (rValue instanceof String)
-				{
-					rValue =
-						parseStringValue(
-							rAttribute,
-							rDatatype,
-							(String) rValue);
-				}
-				else if (rDatatype == Long.class && rValue instanceof Number)
-				{
+				if (rValue instanceof String) {
+					rValue = parseStringValue(rAttribute, rDatatype,
+						(String) rValue);
+				} else if (rDatatype == Long.class &&
+					rValue instanceof Number) {
 					rValue = ((Number) rValue).longValue();
-				}
-				else if (rDatatype == BigInteger.class &&
-						 rValue instanceof BigDecimal)
-				{
+				} else if (rDatatype == BigInteger.class &&
+					rValue instanceof BigDecimal) {
 					// large integer attributes may be stored as decimal values
 					// without a fraction (e.g. SQL NUMERIC type)
 					rValue = ((BigDecimal) rValue).toBigIntegerExact();
@@ -119,13 +106,10 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 
 			Class<?> rValueType = rValue.getClass();
 
-			if (!rDatatype.isAssignableFrom(rValueType))
-			{
+			if (!rDatatype.isAssignableFrom(rValueType)) {
 				String sMessage =
-					String.format(
-						"Attribute type mismatch: %s (expected: %s)",
-						rValueType,
-						rDatatype);
+					String.format("Attribute type mismatch: %s (expected: %s)",
+						rValueType, rDatatype);
 
 				throw new IllegalArgumentException(sMessage);
 			}
@@ -134,7 +118,7 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 		return rValue;
 	}
 
-	/***************************************
+	/**
 	 * Base implementation that converts collections and maps to strings by
 	 * invoking {@link Conversions#asString(Object)}. All other values will be
 	 * returned unchanged.
@@ -142,17 +126,16 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 * @see StorageMapping#mapValue(Relatable, Object)
 	 */
 	@Override
-	public Object mapValue(A rAttribute, Object rValue) throws StorageException
-	{
-		if (rValue instanceof Collection || rValue instanceof Map)
-		{
+	public Object mapValue(A rAttribute, Object rValue)
+		throws StorageException {
+		if (rValue instanceof Collection || rValue instanceof Map) {
 			rValue = Conversions.asString(rValue);
 		}
 
 		return rValue;
 	}
 
-	/***************************************
+	/**
 	 * Default implementation that stores the referenced object inside a
 	 * transaction.
 	 *
@@ -160,12 +143,10 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 	 */
 	@Override
 	public void storeReference(Relatable rSourceObject, T rReferencedObject)
-		throws StorageException
-	{
+		throws StorageException {
 		TransactionManager.begin();
 
-		try
-		{
+		try {
 			// TODO: determine the correct storage if not registered for class
 			Storage rStorage =
 				StorageManager.getStorage(rReferencedObject.getClass());
@@ -174,138 +155,96 @@ public abstract class AbstractStorageMapping<T, A extends Relatable,
 
 			rStorage.store(rReferencedObject);
 			TransactionManager.commit();
-		}
-		catch (Exception e)
-		{
-			try
-			{
+		} catch (Exception e) {
+			try {
 				TransactionManager.rollback();
-			}
-			catch (Exception eRollback)
-			{
+			} catch (Exception eRollback) {
 				Log.error("Transaction rollback failed", eRollback);
 			}
 
-			if (e instanceof StorageException)
-			{
+			if (e instanceof StorageException) {
 				throw (StorageException) e;
-			}
-			else
-			{
+			} else {
 				throw new StorageException(e);
 			}
 		}
 	}
 
-	/***************************************
+	/**
 	 * Parses a value into the corresponding datatype (if possible).
 	 *
-	 * @param  rAttribute The attribute to parse the string for
-	 * @param  rDatatype  The attribute datatype
-	 * @param  sValue     The value to parse
-	 *
+	 * @param rAttribute The attribute to parse the string for
+	 * @param rDatatype  The attribute datatype
+	 * @param sValue     The value to parse
 	 * @return The parsed value or the original input string if parsing was not
-	 *         successful
+	 * successful
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Object parseStringValue(A		 rAttribute,
-									Class<?> rDatatype,
-									String   sValue)
-	{
+	private Object parseStringValue(A rAttribute, Class<?> rDatatype,
+		String sValue) {
 		Object rResult;
 
-		if (rDatatype == Class.class)
-		{
-			try
-			{
+		if (rDatatype == Class.class) {
+			try {
 				rResult = Class.forName(sValue);
-			}
-			catch (ClassNotFoundException e)
-			{
+			} catch (ClassNotFoundException e) {
 				throw new IllegalStateException(e);
 			}
-		}
-		else if (RelationType.class.isAssignableFrom(rDatatype))
-		{
+		} else if (RelationType.class.isAssignableFrom(rDatatype)) {
 			rResult = RelationType.valueOf(sValue);
 
-			if (rResult == null)
-			{
+			if (rResult == null) {
 				throw new IllegalStateException(
-					"Undefined RelationType " +
-					sValue);
+					"Undefined RelationType " + sValue);
 			}
-		}
-		else if (rDatatype.isEnum())
-		{
-			if (HasOrder.class.isAssignableFrom(rDatatype))
-			{
+		} else if (rDatatype.isEnum()) {
+			if (HasOrder.class.isAssignableFrom(rDatatype)) {
 				sValue = sValue.substring(sValue.indexOf('-') + 1);
 			}
 
 			rResult =
 				Enum.valueOf((Class<Enum>) rDatatype, sValue.toUpperCase());
-		}
-		else if (rDatatype == Period.class)
-		{
+		} else if (rDatatype == Period.class) {
 			rResult = Period.valueOf(sValue);
-		}
-		else if (Collection.class.isAssignableFrom(rDatatype))
-		{
+		} else if (Collection.class.isAssignableFrom(rDatatype)) {
 			rResult =
-				parseCollection(
-					sValue,
-					(Class<Collection<Object>>) rDatatype,
+				parseCollection(sValue, (Class<Collection<Object>>) rDatatype,
 					(Class<Object>) rAttribute.get(ELEMENT_DATATYPE),
 					rAttribute.hasFlag(ORDERED));
-		}
-		else if (Map.class.isAssignableFrom(rDatatype))
-		{
-			rResult =
-				parseMap(
-					sValue,
-					(Class<Map<Object, Object>>) rDatatype,
-					(Class<Object>) rAttribute.get(KEY_DATATYPE),
-					(Class<Object>) rAttribute.get(VALUE_DATATYPE),
-					rAttribute.hasFlag(ORDERED));
-		}
-		else
-		{
+		} else if (Map.class.isAssignableFrom(rDatatype)) {
+			rResult = parseMap(sValue, (Class<Map<Object, Object>>) rDatatype,
+				(Class<Object>) rAttribute.get(KEY_DATATYPE),
+				(Class<Object>) rAttribute.get(VALUE_DATATYPE),
+				rAttribute.hasFlag(ORDERED));
+		} else {
 			rResult = tryInvokeParseMethod(rDatatype, sValue);
 		}
 
 		return rResult;
 	}
 
-	/***************************************
+	/**
 	 * Tries to parse a value for a certain datatype from a string by either
 	 * invoking a constructor of the datatype class with a string argument or,
 	 * if that is not possible or fails a valueOf(String) method.
 	 *
-	 * @param  rDatatype The target datatype
-	 * @param  sValue    The value to parse
-	 *
+	 * @param rDatatype The target datatype
+	 * @param sValue    The value to parse
 	 * @return The parsed value or the input value if the parsing is not
-	 *         possible
+	 * possible
 	 */
-	private Object tryInvokeParseMethod(Class<?> rDatatype, String sValue)
-	{
-		Object[] rArgs		  = new Object[] { sValue };
-		Object   rParsedValue = sValue;
+	private Object tryInvokeParseMethod(Class<?> rDatatype, String sValue) {
+		Object[] rArgs = new Object[] { sValue };
+		Object rParsedValue = sValue;
 
-		try
-		{
+		try {
 			rParsedValue = ReflectUtil.newInstance(rDatatype, rArgs, null);
-		}
-		catch (Exception e)
-		{
-			try
-			{
+		} catch (Exception e) {
+			try {
 				rParsedValue =
-					ReflectUtil.invokePublic(rDatatype, "valueOf", rArgs, null);
-			}
-			catch (Exception e2)
-			{
+					ReflectUtil.invokePublic(rDatatype, "valueOf", rArgs,
+						null);
+			} catch (Exception e2) {
 				// just ignore and return the original value
 			}
 		}

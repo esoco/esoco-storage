@@ -21,19 +21,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/********************************************************************
+/**
  * Test class storage mappings.
  *
  * @author eso
  */
 public class ClassMappingTest {
-	//~ Methods
-	// ----------------------------------------------------------------
 
-	/***************************************
+	/**
 	 * Test instance creation.
-	 *
-	 * @throws Exception
 	 */
 	@Test
 	public void testConstructor() throws Exception {

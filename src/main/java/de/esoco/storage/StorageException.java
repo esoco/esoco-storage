@@ -16,48 +16,40 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 package de.esoco.storage;
 
-/********************************************************************
+/**
  * A runtime exception that is thrown by errors in {@link Storage}
  * implementations.
  *
  * @author eso
  */
-public class StorageException extends RuntimeException
-{
-	//~ Static fields/initializers ---------------------------------------------
+public class StorageException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * @see Exception#Exception()
 	 */
-	public StorageException()
-	{
+	public StorageException() {
 	}
 
-	/***************************************
+	/**
 	 * @see Exception#Exception(String)
 	 */
-	public StorageException(String sMessage)
-	{
+	public StorageException(String sMessage) {
 		super(sMessage);
 	}
 
-	/***************************************
+	/**
 	 * @see Exception#Exception(Throwable)
 	 */
-	public StorageException(Throwable eCause)
-	{
+	public StorageException(Throwable eCause) {
 		super(eCause);
 	}
 
-	/***************************************
+	/**
 	 * @see Exception#Exception(String, Throwable)
 	 */
-	public StorageException(String sMessage, Throwable eCause)
-	{
+	public StorageException(String sMessage, Throwable eCause) {
 		super(sMessage, eCause);
 	}
 }

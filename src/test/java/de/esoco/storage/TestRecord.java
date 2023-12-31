@@ -22,138 +22,119 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
-/********************************************************************
+/**
  * Test data record.
  *
  * @author eso
  */
-public class TestRecord
-{
-	//~ Instance fields --------------------------------------------------------
+public class TestRecord {
 
-	private int    id;
+	private int id;
+
 	private String name;
-	private int    value;
-	private Date   date;
-	private URL    url;
+
+	private int value;
+
+	private Date date;
+
+	private URL url;
 
 	private List<TestDetail> details = new ArrayList<TestDetail>();
 
-	//~ Constructors -----------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Default constructor.
 	 */
-	public TestRecord()
-	{
+	public TestRecord() {
 	}
 
-	/***************************************
+	/**
 	 * Creates a new instance.
-	 *
-	 * @param nId
-	 * @param sName
-	 * @param nValue
-	 * @param rDate
-	 * @param rUrl
 	 */
-	public TestRecord(int nId, String sName, int nValue, Date rDate, URL rUrl)
-	{
-		this.id    = nId;
-		this.date  = rDate;
-		this.name  = sName;
+	public TestRecord(int nId, String sName, int nValue, Date rDate,
+		URL rUrl) {
+		this.id = nId;
+		this.date = rDate;
+		this.name = sName;
 		this.value = nValue;
-		this.url   = rUrl;
+		this.url = rUrl;
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Adds a detail record.
 	 *
 	 * @param rDetail The new detail record
 	 */
-	public void addDetail(TestDetail rDetail)
-	{
+	public void addDetail(TestDetail rDetail) {
 		details.add(rDetail);
 		rDetail.parent = this;
 	}
 
-	/***************************************
+	/**
 	 * Returns the date.
 	 *
 	 * @return The date
 	 */
-	public final Date getDate()
-	{
+	public final Date getDate() {
 		return date;
 	}
 
-	/***************************************
+	/**
 	 * Returns the details.
 	 *
 	 * @return The details
 	 */
-	public final List<TestDetail> getDetails()
-	{
+	public final List<TestDetail> getDetails() {
 		return details;
 	}
 
-	/***************************************
+	/**
 	 * Returns the id.
 	 *
 	 * @return The id
 	 */
-	public final int getId()
-	{
+	public final int getId() {
 		return id;
 	}
 
-	/***************************************
+	/**
 	 * Returns the name.
 	 *
 	 * @return The name
 	 */
-	public final String getName()
-	{
+	public final String getName() {
 		return name;
 	}
 
-	/***************************************
+	/**
 	 * Returns the URI.
 	 *
 	 * @return The URI
 	 */
-	public final URL getUrl()
-	{
+	public final URL getUrl() {
 		return url;
 	}
 
-	/***************************************
+	/**
 	 * Returns the value.
 	 *
 	 * @return The value
 	 */
-	public final int getValue()
-	{
+	public final int getValue() {
 		return value;
 	}
 
-	/***************************************
+	/**
 	 * toString method
 	 *
 	 * @return a string
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringBuilder sb = new StringBuilder("TestRecord[");
 
 		sb.append(id + ", " + name + ", " + value + ", " + date);
 
-		if (details.size() > 0)
-		{
+		if (details.size() > 0) {
 			sb.append(details);
 		}
 

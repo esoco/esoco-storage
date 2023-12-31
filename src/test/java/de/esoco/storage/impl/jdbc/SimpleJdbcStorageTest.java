@@ -37,25 +37,17 @@ import static de.esoco.storage.StoragePredicates.forType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/********************************************************************
+/**
  * Simple test of JDBC storage functionality.
  *
  * @author eso
  */
 class SimpleJdbcStorageTest {
-	//~ Instance fields
-	// --------------------------------------------------------
 
 	private Storage rStorage;
 
-	//~ Methods
-	// ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Initializes the storage for the tests.
-	 *
-	 * @throws ClassNotFoundException
-	 * @throws StorageException
 	 */
 	@BeforeEach
 	void setUp() throws ClassNotFoundException, StorageException {
@@ -70,11 +62,10 @@ class SimpleJdbcStorageTest {
 		rStorage.initObjectStorage(TestRecord.class);
 	}
 
-	/***************************************
+	/**
 	 * Performs a rollback and closes the storage.
 	 *
 	 * @throws StorageException On errors
-	 * @throws SQLException
 	 */
 	@AfterEach
 	void tearDown() throws StorageException, SQLException {
@@ -82,10 +73,8 @@ class SimpleJdbcStorageTest {
 		rStorage.release();
 	}
 
-	/***************************************
+	/**
 	 * Store test.
-	 *
-	 * @throws Exception
 	 */
 	@Test
 	void testStore() throws Exception {

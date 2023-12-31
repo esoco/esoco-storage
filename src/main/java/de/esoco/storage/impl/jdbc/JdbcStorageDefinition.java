@@ -39,87 +39,69 @@ import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_LONG_AUTO_IDENTIT
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_LIMIT_EXPRESSION;
 import static de.esoco.storage.impl.jdbc.JdbcRelationTypes.SQL_QUERY_PAGING_EXPRESSION;
 
-
-/********************************************************************
+/**
  * A storage definition implementation for JDBC connections to SQL databases. It
  * contains {@link #create(String)} factory methods that create instances for
  * different JDBC connection lookup methods.
  *
  * @author eso
  */
-public abstract class JdbcStorageDefinition extends StorageDefinition
-{
-	//~ Static fields/initializers ---------------------------------------------
-
-	static
-	{
-		JdbcRelationTypes.init();
-	}
+public abstract class JdbcStorageDefinition extends StorageDefinition {
 
 	private static final long serialVersionUID = 1L;
 
-	//~ Static methods ---------------------------------------------------------
+	static {
+		JdbcRelationTypes.init();
+	}
 
-	/***************************************
+	/**
 	 * Factory method that creates a new instance from a JDBC data source.
 	 *
-	 * @param  rDataSource The JDBC data source
-	 *
+	 * @param rDataSource The JDBC data source
 	 * @return The new storage definition
 	 */
-	public static JdbcStorageDefinition create(DataSource rDataSource)
-	{
+	public static JdbcStorageDefinition create(DataSource rDataSource) {
 		return new JdbcDataSourceStorageDefinition(rDataSource);
 	}
 
-	/***************************************
+	/**
 	 * Factory method that creates a new instance from a JDBC connection URL.
 	 *
-	 * @param  sConnectURL The URL for the JDBC connection
-	 *
+	 * @param sConnectURL The URL for the JDBC connection
 	 * @return The new storage definition
 	 */
-	public static JdbcDriverStorageDefinition create(String sConnectURL)
-	{
+	public static JdbcDriverStorageDefinition create(String sConnectURL) {
 		return new JdbcDriverStorageDefinition(sConnectURL, null);
 	}
 
-	/***************************************
-	 * Factory method that creates a new instance from a JDBC connection URL and
+	/**
+	 * Factory method that creates a new instance from a JDBC connection URL
+	 * and
 	 * connection properties.
 	 *
-	 * @param  sConnectURL The URL for the JDBC connection
-	 * @param  rProperties The connection properties
-	 *
+	 * @param sConnectURL The URL for the JDBC connection
+	 * @param rProperties The connection properties
 	 * @return The new storage definition
 	 */
-	public static JdbcDriverStorageDefinition create(
-		String	   sConnectURL,
-		Properties rProperties)
-	{
+	public static JdbcDriverStorageDefinition create(String sConnectURL,
+		Properties rProperties) {
 		return new JdbcDriverStorageDefinition(sConnectURL, rProperties);
 	}
 
-	//~ Methods ----------------------------------------------------------------
-
-	/***************************************
+	/**
 	 * Returns the database parameters for a certain JBDC connection.
 	 *
-	 * @param  rConnection The database connection
-	 *
+	 * @param rConnection The database connection
 	 * @return The database parameters or NULL to use default values
-	 *
 	 * @throws SQLException if accessing the connection fails
 	 */
 	@SuppressWarnings("boxing")
 	protected Relatable getDatabaseParameters(Connection rConnection)
-		throws SQLException
-	{
-		Relatable aParameters    = new RelatedObject();
-		String    sFuzzyFunction = System.getProperty("storage.sql.fuzzy");
+		throws SQLException {
+		Relatable aParameters = new RelatedObject();
+		String sFuzzyFunction = System.getProperty("storage.sql.fuzzy");
 
-		if (sFuzzyFunction == null)
-		{
+		if (sFuzzyFunction == null) {
 			sFuzzyFunction = "soundex";
 		}
 
@@ -128,8 +110,7 @@ public abstract class JdbcStorageDefinition extends StorageDefinition
 
 		Map<Class<?>, String> rDatatypeMap = aParameters.get(SQL_DATATYPE_MAP);
 
-		if (sDatabaseName.contains("postgres"))
-		{
+		if (sDatabaseName.contains("postgres")) {
 			sFuzzyFunction = "dmetaphone";
 
 			aParameters.set(SQL_AUTO_IDENTITY_DATATYPE, "SERIAL");
@@ -141,10 +122,8 @@ public abstract class JdbcStorageDefinition extends StorageDefinition
 			rDatatypeMap.put(byte[].class, "BYTEA");
 			rDatatypeMap.put(Map.class, "HSTORE");
 			rDatatypeMap.put(JsonObject.class, "JSONB");
-		}
-		else if (sDatabaseName.contains("mysql") ||
-				 sDatabaseName.contains("mariadb"))
-		{
+		} else if (sDatabaseName.contains("mysql") ||
+			sDatabaseName.contains("mariadb")) {
 			aParameters.set(SQL_IDENTITIFIER_QUOTE, '`');
 			rDatatypeMap.put(String.class, "TEXT");
 		}
