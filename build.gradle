@@ -1,67 +1,76 @@
-apply plugin: 'java-library'
-apply plugin: 'eclipse'
-
-project.group   = 'de.esoco'
-
-sourceCompatibility = 1.8
-
-repositories {
-	mavenLocal()
-    jcenter()
+plugins {
+    id "java-library"
+    id "pl.allegro.tech.build.axion-release" version "$axionReleaseVersion"
+    id "com.vanniktech.maven.publish" version "$mavenPublishVersion"
 }
 
-// substitute local project dependencies if available
-configurations.all {
-	resolutionStrategy.dependencySubstitution.all { DependencySubstitution dependency ->
-		if (dependency.requested instanceof ModuleComponentSelector &&
-			["org.obrel" ,"de.esoco"].contains(dependency.requested.group)) {
-			def targetProject = findProject(":${dependency.requested.module}")
-			if (targetProject != null) {
-				dependency.useTarget (targetProject, "prefer local project")
-				if (name.startsWith("compile")) // only log once
-					println "$project.name using local $targetProject as dependency"
-			}
-		}
-	}
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+scmVersion { tag { prefix.set("") } }
+
+project.version = scmVersion.version
+project.group = 'de.esoco'
+project.description = 'General development support functions'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
-	api 'de.esoco:esoco-lib:1.5.+'
+	api 'de.esoco:esoco-lib:1.6.0'
 
-	testImplementation platform('org.junit:junit-bom:5.5.2')	
+	testImplementation platform("org.junit:junit-bom:$junitVersion")
 	testImplementation 'org.junit.jupiter:junit-jupiter'
-	testImplementation 'junit:junit:4.12'
 	
-	testRuntimeOnly 'org.junit.vintage:junit-vintage-engine' // JUnit4 support
     testRuntimeOnly 'com.h2database:h2:1.4.200'
 }
 
-task sourceJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
 artifacts {
-    archives sourceJar
+    archives sourcesJar
     archives javadocJar
 }
 
-tasks.withType(Javadoc) {
-    failOnError = false
-    options.addBooleanOption('quiet', true)
-    
-    if (JavaVersion.current().isJava8Compatible()) {
-        options.addBooleanOption('Xdoclint:none', true) 
+mavenPublishing {
+    coordinates("$project.group", "$project.name", "$project.version")
+
+    pom {
+        name = "$project.name"
+        description = "$project.description"
+        inceptionYear = "2016"
+        url = "https://github.com/esoco/${project.name}"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "esoco"
+                name = "esoco GmbH"
+                url = "https://esoco.de/"
+            }
+        }
+        scm {
+            url = "https://github.com/esoco/${project.name}/"
+            connection = "scm:git:git://github.com/esoco/${project.name}.git"
+            developerConnection = "scm:git:ssh://git@github.com/esoco/${project.name}.git"
+        }
     }
 }
-
-buildscript {
-	repositories { jcenter() }
-	dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+' }
-}
-apply from: 'publish.gradle'
