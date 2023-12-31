@@ -23,16 +23,16 @@ import de.esoco.lib.expression.StringFunctions;
 import de.esoco.lib.expression.predicate.FunctionPredicate;
 
 import de.esoco.storage.mapping.ClassMapping;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 
 import java.util.Date;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import static de.esoco.lib.expression.Predicates.equalTo;
 import static de.esoco.lib.expression.Predicates.greaterOrEqual;
@@ -44,16 +44,15 @@ import static de.esoco.storage.StoragePredicates.ifField;
 import static de.esoco.storage.StoragePredicates.like;
 import static de.esoco.storage.StoragePredicates.similarTo;
 import static de.esoco.storage.StoragePredicates.sortBy;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /********************************************************************
  * Abstract base class with tests of storage functions that are independent of
  * storage implementations. A subclass that tests a specific storage
- * implementations only needs to implement a method with the {@link BeforeClass}
+ * implementations only needs to implement a method with the {@link BeforeAll}
  * annotation of JUnit that sets the storage definition for the implementation
  * with {@link StorageManager#setDefaultStorage(StorageDefinition)}.
  *
@@ -76,7 +75,7 @@ public abstract class AbstractStorageTest
 	 *
 	 * @throws StorageException If the rollback fails
 	 */
-	@After
+	@AfterEach
 	public void finish() throws StorageException
 	{
 		rStorage.rollback();
@@ -88,7 +87,7 @@ public abstract class AbstractStorageTest
 	 *
 	 * @throws Exception On errors
 	 */
-	@Before
+	@BeforeEach
 	public void initStorage() throws Exception
 	{
 		rStorage = StorageManager.getStorage(TestRecord.class);
@@ -155,7 +154,7 @@ public abstract class AbstractStorageTest
 		try
 		{
 			performDelete();
-			assertTrue("Should throw an StorageException", false);
+			fail("Should throw an StorageException");
 		}
 		catch (StorageException e)
 		{

@@ -20,12 +20,12 @@ java {
 }
 
 dependencies {
-	api 'de.esoco:esoco-lib:1.6.0'
+    api 'de.esoco:esoco-lib:1.6.0'
 
-	testImplementation platform("org.junit:junit-bom:$junitVersion")
-	testImplementation 'org.junit.jupiter:junit-jupiter'
-	
-    testRuntimeOnly 'com.h2database:h2:1.4.200'
+    testImplementation platform("org.junit:junit-bom:$junitVersion")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    testRuntimeOnly 'com.h2database:h2:2.2.224'
 }
 
 tasks.register('sourcesJar', Jar) {

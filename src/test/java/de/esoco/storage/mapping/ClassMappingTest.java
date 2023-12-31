@@ -17,20 +17,18 @@
 package de.esoco.storage.mapping;
 
 import de.esoco.storage.TestRecord;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /********************************************************************
  * Test class storage mappings.
  *
  * @author eso
  */
-public class ClassMappingTest
-{
-	//~ Methods ----------------------------------------------------------------
+public class ClassMappingTest {
+	//~ Methods
+	// ----------------------------------------------------------------
 
 	/***************************************
 	 * Test instance creation.
@@ -38,8 +36,7 @@ public class ClassMappingTest
 	 * @throws Exception
 	 */
 	@Test
-	public void testConstructor() throws Exception
-	{
+	public void testConstructor() throws Exception {
 		ClassMapping<TestRecord> aMapping =
 			new ClassMapping<>(TestRecord.class);
 

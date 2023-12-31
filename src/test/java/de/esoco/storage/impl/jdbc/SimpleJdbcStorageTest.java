@@ -23,38 +23,33 @@ import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageManager;
 import de.esoco.storage.TestDetail;
 import de.esoco.storage.TestRecord;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URL;
-
 import java.sql.SQLException;
-
 import java.util.Date;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import static de.esoco.lib.expression.Predicates.equalTo;
 import static de.esoco.lib.expression.Predicates.ifField;
-
 import static de.esoco.storage.StoragePredicates.forType;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /********************************************************************
  * Simple test of JDBC storage functionality.
  *
  * @author eso
  */
-public class SimpleJdbcStorageTest
-{
-	//~ Instance fields --------------------------------------------------------
+class SimpleJdbcStorageTest {
+	//~ Instance fields
+	// --------------------------------------------------------
 
 	private Storage rStorage;
 
-	//~ Methods ----------------------------------------------------------------
+	//~ Methods
+	// ----------------------------------------------------------------
 
 	/***************************************
 	 * Initializes the storage for the tests.
@@ -62,14 +57,13 @@ public class SimpleJdbcStorageTest
 	 * @throws ClassNotFoundException
 	 * @throws StorageException
 	 */
-	@Before
-	public void setUp() throws ClassNotFoundException, StorageException
-	{
+	@BeforeEach
+	void setUp() throws ClassNotFoundException, StorageException {
 		Class.forName("org.h2.Driver");
 //		Class.forName("org.postgresql.Driver");
 
-		StorageManager.registerStorage(JdbcStorageDefinition.create("jdbc:h2:mem:testdb;user=sa;password="),
-									   TestRecord.class);
+		StorageManager.registerStorage(JdbcStorageDefinition.create(
+			"jdbc:h2:mem:testdb;user=sa;password="), TestRecord.class);
 
 		rStorage = StorageManager.getStorage(TestRecord.class);
 
@@ -82,9 +76,8 @@ public class SimpleJdbcStorageTest
 	 * @throws StorageException On errors
 	 * @throws SQLException
 	 */
-	@After
-	public void tearDown() throws StorageException, SQLException
-	{
+	@AfterEach
+	void tearDown() throws StorageException, SQLException {
 		rStorage.rollback();
 		rStorage.release();
 	}
@@ -95,17 +88,11 @@ public class SimpleJdbcStorageTest
 	 * @throws Exception
 	 */
 	@Test
-	public void testStore() throws Exception
-	{
-		TestRecord		  aTestRecord =
-			new TestRecord(1,
-						   "Test1",
-						   1,
-						   new Date(),
-						   new URL("http://example.com"));
-		Query<TestRecord> aQuery	  =
-			rStorage.query(forType(TestRecord.class,
-								   ifField("name", equalTo("Test1"))));
+	void testStore() throws Exception {
+		TestRecord aTestRecord = new TestRecord(1, "Test1", 1, new Date(),
+			new URL("http://example.com"));
+		Query<TestRecord> aQuery = rStorage.query(
+			forType(TestRecord.class, ifField("name", equalTo("Test1"))));
 
 		rStorage.store(aTestRecord);
 

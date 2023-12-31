@@ -19,9 +19,7 @@ package de.esoco.storage.impl.jdbc;
 import de.esoco.storage.AbstractStorageTest;
 import de.esoco.storage.StorageException;
 import de.esoco.storage.StorageManager;
-
-import org.junit.BeforeClass;
-
+import org.junit.jupiter.api.BeforeAll;
 
 /********************************************************************
  * JDBC specific storage test implementation.
@@ -37,7 +35,7 @@ public class JdbcStorageTest extends AbstractStorageTest
 	 *
 	 * @throws StorageException If the storage initialization fails
 	 */
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws StorageException
 	{
 		try
