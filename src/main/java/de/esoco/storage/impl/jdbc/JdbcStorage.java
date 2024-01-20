@@ -154,13 +154,13 @@ public class JdbcStorage extends Storage {
 			Collections.unmodifiableMap(sqlDatatypeMap);
 	}
 
-	private Connection connection;
-
 	private final String databaseName;
 
 	private final String fuzzySearchFunction;
 
 	private final char identifierQuote;
+
+	private Connection connection;
 
 	private Map<Class<?>, String> datatypeMap = STANDARD_SQL_DATATYPE_MAP;
 
@@ -791,7 +791,7 @@ public class JdbcStorage extends Storage {
 	/**
 	 * Creates a SQL update statement to be used as a prepared statement.
 	 *
-	 * @param mapping rObject The object to create the statement for
+	 * @param mapping object The object to create the statement for
 	 * @return The statement string
 	 * @throws StorageException If creating the statement fails
 	 */
@@ -968,21 +968,21 @@ public class JdbcStorage extends Storage {
 	 * from the given SQL statement. Any occurring SQLException will be
 	 * converted into a {@link StorageException}.
 	 *
-	 * @param sQL        The SQL statement to prepare
+	 * @param qL         The SQL statement to prepare
 	 * @param returnKeys TRUE if the statement will return auto-generated keys
 	 * @return The prepared statement
 	 * @throws StorageException If preparing the statement fails
 	 */
-	private PreparedStatement prepareStatement(String sQL, boolean returnKeys)
+	private PreparedStatement prepareStatement(String qL, boolean returnKeys)
 		throws StorageException {
 		try {
 			int returnKeysMode = returnKeys ?
 			                     Statement.RETURN_GENERATED_KEYS :
 			                     Statement.NO_GENERATED_KEYS;
 
-			return connection.prepareStatement(sQL, returnKeysMode);
+			return connection.prepareStatement(qL, returnKeysMode);
 		} catch (SQLException e) {
-			Log.error("Preparing statement failed: " + sQL, e);
+			Log.error("Preparing statement failed: " + qL, e);
 			throw new StorageException("Preparing statement failed", e);
 		}
 	}

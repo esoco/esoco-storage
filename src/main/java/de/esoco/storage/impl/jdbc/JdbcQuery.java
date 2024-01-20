@@ -941,8 +941,7 @@ public class JdbcQuery<T> extends RelatedObject implements Query<T>, Closeable {
 	 * Returns the placeholders for the compare values in a prepared statement
 	 * ('?') and adds the corresponding compare values to the internal list.
 	 *
-	 * @param compareValue rComparison The comparison to create the
-	 *                        placeholders
+	 * @param compareValue comparison The comparison to create the placeholders
 	 *                     for
 	 * @return The resulting string of comma-separated placeholders
 	 */
